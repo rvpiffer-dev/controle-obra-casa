@@ -1,4 +1,4 @@
-// v29 - drill-down do Resumo para o Orçamento Detalhado filtrado por macroetapa
+// v30 - drill-down do Resumo + carregamento isolado do painel de gestão
 (function(){
   const previous=window.renderBudget;
   const esc=v=>String(v??'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]));
@@ -45,4 +45,12 @@
 
   try{if((window.__budgetTab||'summary')==='summary')decorateSummary()}catch(e){console.error(e)}
   window.__summaryDrilldownV29=true;
+
+  // Painel de gestão é uma camada separada da base v29.
+  if(!window.__managementV30){
+    const s=document.createElement('script');
+    s.src='app-management-v30.js?v=30';
+    s.onerror=()=>console.error('Falha ao carregar painel de gestão v30');
+    document.head.appendChild(s);
+  }
 })();
