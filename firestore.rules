@@ -1,13 +1,11 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Substituir os e-mails abaixo pelos dois usuários autorizados antes de publicar as regras.
     function usuarioAutorizado() {
       return request.auth != null
-        && request.auth.token.email_verified == true
         && request.auth.token.email in [
-          "SEU_EMAIL_AQUI",
-          "EMAIL_DA_TALITA_AQUI"
+          "rvpiffer@gmail.com",
+          "talileopoldino@gmail.com"
         ];
     }
 
