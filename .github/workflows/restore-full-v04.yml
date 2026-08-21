@@ -1,0 +1,48 @@
+name: Restaurar app completo v04
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'trigger-full-v04.txt'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reconstruir aplicativo completo
+        run: |
+          cat payload/01.part payload/02.part payload/03.part payload/04.part payload/05.part payload/06.part payload/07.part payload/08.part > /tmp/app.b64
+          base64 -d /tmp/app.b64 > /tmp/app.html.gz
+          gzip -dc /tmp/app.html.gz > index.html
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          tags=[
+            '<script src="app-v04-patch.js?v=4"></script>',
+            '<script src="app-v04-hydrate.js?v=1"></script>'
+          ]
+          for tag in tags:
+              if tag not in s:
+                  s=s.replace('</body>', tag+'\n</body>')
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Conferir base
+        run: |
+          grep -q '"tasks":\[{"id":1' index.html
+          grep -q '"services":\[' index.html
+          grep -q 'app-v04-hydrate.js' index.html
+      - name: Publicar no branch main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          if ! git diff --cached --quiet; then
+            git commit -m "Restaura base completa e ativa v04 [skip ci]"
+            git push
+          fi
