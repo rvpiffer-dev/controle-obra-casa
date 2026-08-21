@@ -29,34 +29,45 @@ jobs:
           raw=base64.b64decode(b64, validate=True)
           html=gzip.decompress(raw).decode('utf-8')
 
-          checks=['"id":52','"services":[','firebase.initializeApp']
-          for c in checks:
+          # Primeiro valida a base técnica que já existe no pacote.
+          for c in ['"id":52','"services":[']:
               if c not in html:
-                  raise SystemExit(f'Base completa inválida: não encontrou {c}')
+                  raise SystemExit(f'Base técnica inválida: não encontrou {c}')
 
+          # Depois injeta Firebase + gestão v04/v05.
           tags=[
-              '<script src="app-v04-patch.js?v=5"></script>',
-              '<script src="app-v05-cloudfix.js?v=5"></script>'
+              '<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>',
+              '<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>',
+              '<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>',
+              '<script src="app-v04-patch.js?v=6"></script>',
+              '<script src="firebase-sync-v05.js?v=6"></script>'
           ]
           for tag in tags:
               if tag not in html:
                   html=html.replace('</body>', tag+'\n</body>')
 
+          html=html.replace('<title>Controle da Obra</title>','<title>Controle da Obra v05</title>')
           Path('index.html').write_text(html,encoding='utf-8')
           print('index.html reconstruído:', len(html), 'bytes')
           PY
 
-      - name: Conferir base completa
+      - name: Conferir versão publicada
         run: |
           python - <<'PY'
           from pathlib import Path
           s=Path('index.html').read_text(encoding='utf-8')
-          assert '"id":52' in s
-          assert '"services":[' in s
-          assert 'firebase.initializeApp' in s
-          assert 'app-v04-patch.js?v=5' in s
-          assert 'app-v05-cloudfix.js?v=5' in s
-          print('Validação OK')
+          checks=[
+              '"id":52',
+              '"services":[',
+              'firebase-app-compat.js',
+              'firebase-auth-compat.js',
+              'firebase-firestore-compat.js',
+              'app-v04-patch.js?v=6',
+              'firebase-sync-v05.js?v=6'
+          ]
+          for c in checks:
+              assert c in s, f'Falhou validação: {c}'
+          print('VALIDAÇÃO OK — base completa + Firebase')
           PY
 
       - name: Publicar no branch main
