@@ -2,10 +2,6 @@ name: Publicar app completo v05
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - 'trigger-full-v04.txt'
 
 permissions:
   contents: write
@@ -15,36 +11,62 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Reconstruir aplicativo completo
         run: |
-          cat payload/01.part payload/02.part payload/03.part payload/04.part payload/05.part payload/06.part payload/07.part payload/08.part > /tmp/app.b64
-          base64 -d /tmp/app.b64 > /tmp/app.html.gz
-          gzip -dc /tmp/app.html.gz > index.html
           python - <<'PY'
           from pathlib import Path
-          p=Path('index.html')
-          s=p.read_text(encoding='utf-8')
+          import base64, gzip
+
+          parts=[]
+          for i in range(1,9):
+              p=Path(f'payload/{i:02d}.part')
+              if not p.exists():
+                  raise SystemExit(f'Arquivo ausente: {p}')
+              parts.append(''.join(p.read_text(encoding='utf-8').split()))
+
+          b64=''.join(parts)
+          raw=base64.b64decode(b64, validate=True)
+          html=gzip.decompress(raw).decode('utf-8')
+
+          checks=['"id":52','"services":[','firebase.initializeApp']
+          for c in checks:
+              if c not in html:
+                  raise SystemExit(f'Base completa inválida: não encontrou {c}')
+
           tags=[
-            '<script src="app-v04-patch.js?v=5"></script>',
-            '<script src="app-v05-cloudfix.js?v=5"></script>'
+              '<script src="app-v04-patch.js?v=5"></script>',
+              '<script src="app-v05-cloudfix.js?v=5"></script>'
           ]
           for tag in tags:
-              if tag not in s:
-                  s=s.replace('</body>', tag+'\n</body>')
-          p.write_text(s,encoding='utf-8')
+              if tag not in html:
+                  html=html.replace('</body>', tag+'\n</body>')
+
+          Path('index.html').write_text(html,encoding='utf-8')
+          print('index.html reconstruído:', len(html), 'bytes')
           PY
+
       - name: Conferir base completa
         run: |
-          grep -q '"id":52' index.html
-          grep -q '"services":\[' index.html
-          grep -q 'firebase.initializeApp' index.html
-          grep -q 'app-v05-cloudfix.js' index.html
+          python - <<'PY'
+          from pathlib import Path
+          s=Path('index.html').read_text(encoding='utf-8')
+          assert '"id":52' in s
+          assert '"services":[' in s
+          assert 'firebase.initializeApp' in s
+          assert 'app-v04-patch.js?v=5' in s
+          assert 'app-v05-cloudfix.js?v=5' in s
+          print('Validação OK')
+          PY
+
       - name: Publicar no branch main
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html
-          if ! git diff --cached --quiet; then
+          if git diff --cached --quiet; then
+            echo "index.html já está atualizado"
+          else
             git commit -m "Publica aplicativo completo v05 [skip ci]"
             git push
           fi
