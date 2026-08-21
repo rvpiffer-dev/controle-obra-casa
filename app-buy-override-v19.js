@@ -1,4 +1,4 @@
-// v20 - override isolado da aba Compras com filtro mensal por atividades
+// v21 - Compras mensal sem fechar o seletor durante sincronizacao/renderAll
 (function(){
   const previous = window.renderBudget;
 
@@ -73,7 +73,11 @@
       </div>
       <div class="card">
         <label>Mês de execução</label>
-        <select onchange="renderBudget('buy',this.value)">${opts}</select>
+        <select id="buyMonthSelectV21"
+          onfocus="window.__buyMonthSelecting=true"
+          onpointerdown="window.__buyMonthSelecting=true"
+          onchange="window.__buyMonthSelecting=false;renderBudget('buy',this.value)"
+          onblur="setTimeout(()=>{window.__buyMonthSelecting=false},150)">${opts}</select>
       </div>
       <div class="grid" style="margin-top:10px">
         <div class="card kpi"><div class="label">Itens no mês</div><div class="value">${items.length}</div></div>
@@ -92,18 +96,25 @@
   };
 
   window.renderBudget=function(tab,month){
+    const implicitCall = arguments.length===0;
     tab=tab||window.__budgetTab||'summary';
+
+    // renderAll()/Firebase nao recriam a aba enquanto o usuario esta escolhendo o mes.
+    if(implicitCall && tab==='buy' && window.__buyMonthSelecting){
+      return;
+    }
+
     if(tab==='buy'){
       try{ return renderBuy(month); }
       catch(e){
-        console.error('Compras v20',e);
+        console.error('Compras v21',e);
         const el=document.getElementById('budget');
-        if(el) el.innerHTML='<div class="empty">Erro ao abrir Compras v20: '+esc(e.message||e)+'</div>';
+        if(el) el.innerHTML='<div class="empty">Erro ao abrir Compras v21: '+esc(e.message||e)+'</div>';
         return;
       }
     }
     return previous(tab,month);
   };
 
-  window.__buyOverrideV20=true;
+  window.__buyOverrideV21=true;
 })();
