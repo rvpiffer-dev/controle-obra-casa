@@ -1,4 +1,4 @@
-// v30 - drill-down do Resumo + carregamento isolado do painel de gestão
+// v31 - drill-down do Resumo + carregamento isolado do painel de gestão e cronograma físico-financeiro
 (function(){
   const previous=window.renderBudget;
   const esc=v=>String(v??'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]));
@@ -46,11 +46,16 @@
   try{if((window.__budgetTab||'summary')==='summary')decorateSummary()}catch(e){console.error(e)}
   window.__summaryDrilldownV29=true;
 
-  // Painel de gestão é uma camada separada da base v29.
   if(!window.__managementV30){
     const s=document.createElement('script');
-    s.src='app-management-v30.js?v=30';
+    s.src='app-management-v30.js?v=31';
     s.onerror=()=>console.error('Falha ao carregar painel de gestão v30');
+    document.head.appendChild(s);
+  }
+  if(!window.__physicalFinancialV31){
+    const s=document.createElement('script');
+    s.src='app-physical-financial-v31.js?v=31';
+    s.onerror=()=>console.error('Falha ao carregar cronograma físico-financeiro v31');
     document.head.appendChild(s);
   }
 })();
