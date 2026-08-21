@@ -1,14 +1,12 @@
-// v14 - usa full-seed.js textual; fallback para payload legado apenas se necessário.
+// v15 - carrega full-seed.js e ativa cronograma + orçamento completos.
 (async function(){
   let fullSeed=null;
   const pill=()=>document.getElementById('syncPill');
   const setPill=(txt,ok=false)=>{const p=pill();if(p){p.textContent=txt;p.className='sync-pill '+(ok?'ok':'warn')}};
-
   function loadScript(src){return new Promise((resolve,reject)=>{const s=document.createElement('script');s.src=src;s.onload=resolve;s.onerror=()=>reject(new Error('Falha ao carregar '+src));document.head.appendChild(s)})}
-
   async function loadStaticSeed(){
     setPill('carregando base…');
-    await loadScript('full-seed.js?v=14');
+    await loadScript('full-seed.js?v=15');
     const seed=window.FULL_SEED;
     if(!seed) throw new Error('FULL_SEED não definido');
     if(seed.tasks?.length!==52) throw new Error('atividades: '+(seed.tasks?.length||0));
@@ -17,7 +15,6 @@
     if(seed.abc?.length!==136) throw new Error('ABC: '+(seed.abc?.length||0));
     return seed;
   }
-
   function normalize(remote){
     if(!fullSeed) return remote||state;
     const r=remote||{},fresh=JSON.parse(JSON.stringify(fullSeed));
@@ -29,14 +26,16 @@
     fresh.pls=(fresh.pls||[]).map(p=>{const o=oldPls.get(p.stage);return o?{...p,status:o.status||p.status,notes:o.notes||''}:p});
     return fresh;
   }
-
   try{
     fullSeed=await loadStaticSeed();
     window.__FULL_SEED=fullSeed;
+    state=normalize(state);
+    try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}
+    await loadScript('app-budget-v15.js?v=15');
     const originalRenderAll=window.renderAll;
     window.renderAll=function(){state=normalize(state);try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){};return originalRenderAll()};
-    state=normalize(state);
     renderAll();
+    try{renderBudget('summary')}catch(e){console.error(e)}
     setPill('52 atividades',true);
     let tries=0;
     const timer=setInterval(async()=>{
@@ -47,7 +46,7 @@
       }else if(tries>=40){setPill('52 atividades',true);clearInterval(timer)}
     },500);
   }catch(e){
-    console.error('Falha base v14',e);
-    setPill('base v14 pendente');
+    console.error('Falha base v15',e);
+    setPill('base v15 pendente');
   }
 })();
