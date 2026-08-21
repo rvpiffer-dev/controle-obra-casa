@@ -1,0 +1,7 @@
+v31
+- Mantém versão estável v29 preservada na branch versao-estavel-v29.
+- Painel de gestão v30 preservado.
+- Adiciona em Cronograma as visões Atividades e Físico-financeiro.
+- Físico-financeiro mensal com previsto, acumulado, realizado pago e marcos PLS.
+- Curva S de previsto acumulado x financeiro realizado acumulado.
+- Avanço físico atual ponderado pelo orçamento das atividades.
