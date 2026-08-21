@@ -1,4 +1,4 @@
-name: Aplicar v04 ao app principal
+name: Publicar aplicativo completo v05
 
 on:
   push:
@@ -10,31 +10,43 @@ permissions:
   contents: write
 
 jobs:
-  patch:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Inserir módulos v04 no index
+      - name: Reconstruir aplicativo completo a partir da base preservada
+        run: |
+          cat payload/01.part payload/02.part payload/03.part payload/04.part payload/05.part payload/06.part payload/07.part payload/08.part > /tmp/app.b64
+          base64 -d /tmp/app.b64 > /tmp/app.html.gz
+          gzip -dc /tmp/app.html.gz > index.html
+      - name: Ativar gestão e correção de sincronização
         run: |
           python - <<'PY'
           from pathlib import Path
           p=Path('index.html')
           s=p.read_text(encoding='utf-8')
+          s=s.replace('<title>Controle da Obra</title>','<title>Controle da Obra v05</title>')
           tags=[
-            '<script src="app-v04-patch.js?v=4"></script>',
-            '<script src="app-full-loader.js?v=1"></script>'
+            '<script src="app-v04-patch.js?v=5"></script>',
+            '<script src="app-full-loader.js?v=5"></script>'
           ]
           for tag in tags:
               if tag not in s:
                   s=s.replace('</body>', tag+'\n</body>')
           p.write_text(s,encoding='utf-8')
           PY
-      - name: Commit
+      - name: Validar conteúdo completo
+        run: |
+          grep -q '"id":52' index.html
+          grep -q '"services":\[' index.html
+          grep -q 'Curva ABC' index.html
+          grep -q 'Programação de compras' index.html
+          grep -q 'app-v04-patch.js?v=5' index.html
+          grep -q 'app-full-loader.js?v=5' index.html
+      - name: Publicar
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html
-          if ! git diff --cached --quiet; then
-            git commit -m "Ativa base completa e gestão v04 [skip ci]"
-            git push
-          fi
+          git commit -m "Publica aplicativo completo v05 [skip ci]"
+          git push
