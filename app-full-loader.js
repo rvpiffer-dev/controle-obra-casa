@@ -1,4 +1,4 @@
-// v22 - base completa + orçamento; sem loop de re-render a cada 500 ms
+// v23 - base completa + orçamento + Compras com ABC mensal e calendario semanal
 (async function(){
   let fullSeed=null;
   const pill=()=>document.getElementById('syncPill');
@@ -6,7 +6,7 @@
   function loadScript(src){return new Promise((resolve,reject)=>{const s=document.createElement('script');s.src=src;s.onload=resolve;s.onerror=()=>reject(new Error('Falha ao carregar '+src));document.head.appendChild(s)})}
   async function loadStaticSeed(){
     setPill('carregando base…');
-    await loadScript('full-seed.js?v=22');
+    await loadScript('full-seed.js?v=23');
     const seed=window.FULL_SEED;
     if(!seed) throw new Error('FULL_SEED não definido');
     if(seed.tasks?.length!==52) throw new Error('atividades: '+(seed.tasks?.length||0));
@@ -31,9 +31,9 @@
     window.__FULL_SEED=fullSeed;
     state=normalize(state);
     try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}
-    await loadScript('app-buy-helpers-v18.js?v=22');
-    await loadScript('app-budget-v15.js?v=22');
-    await loadScript('app-buy-override-v19.js?v=22');
+    await loadScript('app-buy-helpers-v18.js?v=23');
+    await loadScript('app-budget-v15.js?v=23');
+    await loadScript('app-buy-override-v19.js?v=23');
 
     const originalRenderAll=window.renderAll;
     window.renderAll=function(){
@@ -42,11 +42,10 @@
       return originalRenderAll();
     };
 
-    // Uma única renderização inicial. Firebase cuida das atualizações posteriores.
     renderAll();
     setPill('52 atividades',true);
   }catch(e){
-    console.error('Falha base v22',e);
-    setPill('base v22 pendente');
+    console.error('Falha base v23',e);
+    setPill('base v23 pendente');
   }
 })();
