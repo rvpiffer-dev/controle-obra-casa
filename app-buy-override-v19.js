@@ -1,4 +1,4 @@
-// v23 - Compras mensal com Curva ABC e calendario semanal
+// v25 - Compras mensal com ABC/calendario e exclusao de insumos duplicados da alvenaria
 (function(){
   const previous = window.renderBudget;
 
@@ -11,7 +11,6 @@
   }
   function monthKey(d){ return String(d||'').slice(0,7); }
   function parseDate(s){ return s?new Date(String(s).slice(0,10)+'T12:00:00'):null; }
-  function isoDate(d){ return d.toISOString().slice(0,10); }
   function dayMs(){ return 86400000; }
   function overlapDays(a1,a2,b1,b2){
     const s=new Date(Math.max(a1.getTime(),b1.getTime()));
@@ -24,6 +23,20 @@
     const p=k.split('-');
     return new Intl.DateTimeFormat('pt-BR',{month:'long',year:'numeric'}).format(new Date(Number(p[0]),Number(p[1])-1,1));
   }
+
+  // O serviço 04.01 foi ajustado para retirar blocos/canaletas da composição SINAPI.
+  // Esses insumos aparecem novamente como linhas específicas 04.02, 04.03 e 04.05,
+  // com os preços válidos do orçamento/EAP. Portanto, os insumos analíticos abaixo
+  // não podem entrar novamente em Compras/ABC/calendário.
+  function isAdjustedMasonryDuplicate(p){
+    if(String(p.serviceCode||'')!=='04.01') return false;
+    if(String(p.source||'').toLowerCase()!=='sinapi analítico') return false;
+    return ['34586','34649','34788'].includes(String(p.inputCode||''));
+  }
+  function validPurchases(){
+    return (Array.isArray(state.purchases)?state.purchases:[]).filter(p=>!isAdjustedMasonryDuplicate(p));
+  }
+
   function months(){
     const set=new Set();
     (state.tasks||[]).forEach(t=>{
@@ -48,7 +61,7 @@
   }
   function itemsForMonth(k){
     const ids=new Set((state.tasks||[]).filter(t=>taskActiveInMonth(t,k)).map(t=>String(t.id)));
-    return (Array.isArray(state.purchases)?state.purchases:[]).filter(p=>ids.has(String(p.taskId)));
+    return validPurchases().filter(p=>ids.has(String(p.taskId)));
   }
   function groupedItems(items){
     const m=new Map();
@@ -91,7 +104,7 @@
         planned+=(Number(t.plannedCost)||0)*(od/totalDays);
       });
       const ids=new Set(tasks.map(t=>String(t.id)));
-      const materials=groupedItems((state.purchases||[]).filter(p=>ids.has(String(p.taskId)))).sort((a,b)=>b.estimatedCost-a.estimatedCost);
+      const materials=groupedItems(validPurchases().filter(p=>ids.has(String(p.taskId)))).sort((a,b)=>b.estimatedCost-a.estimatedCost);
       const materialTotal=materials.reduce((s,x)=>s+x.estimatedCost,0);
       return {idx:idx+1,ws,we,tasks,planned,materials,materialTotal};
     });
@@ -132,23 +145,23 @@
     el.innerHTML=`
       <div class="section-title">Programação de compras <span>${esc(monthLabel(k))}</span></div>
       <div class="tabs"><button onclick="renderBudget('summary')">Resumo</button><button onclick="renderBudget('detail')">Detalhado</button><button onclick="renderBudget('abc')">Curva ABC</button><button class="on" onclick="renderBudget('buy')">Compras</button></div>
-      <div class="card"><label>Mês de execução</label><select id="buyMonthSelectV23" onfocus="window.__buyMonthSelecting=true" onpointerdown="window.__buyMonthSelecting=true" onchange="window.__buyMonthSelecting=false;renderBudget('buy',this.value)" onblur="setTimeout(()=>{window.__buyMonthSelecting=false},150)">${opts}</select></div>
+      <div class="card"><label>Mês de execução</label><select id="buyMonthSelectV25" onfocus="window.__buyMonthSelecting=true" onpointerdown="window.__buyMonthSelecting=true" onchange="window.__buyMonthSelecting=false;renderBudget('buy',this.value)" onblur="setTimeout(()=>{window.__buyMonthSelecting=false},150)">${opts}</select></div>
       <div class="grid" style="margin-top:10px"><div class="card kpi"><div class="label">Itens no mês</div><div class="value">${items.length}</div></div><div class="card kpi"><div class="label">Estimativa do mês</div><div class="value">${brl(total)}</div></div></div>
       ${renderABC(items)}
       ${renderCalendar(k)}
-      <div class="search"><input placeholder="Buscar compra neste mês..." oninput="window.filterBuyV23(this.value)"></div>
+      <div class="search"><input placeholder="Buscar compra neste mês..." oninput="window.filterBuyV25(this.value)"></div>
       <div class="section-title">Itens de compra <span>${items.length}</span></div>
-      <div class="list" id="buyListV23">${items.length?items.map((p,i)=>`<div class="item buy-v23-row" data-q="${esc(((p.name||'')+' '+(p.source||'')+' '+(p.unit||'')+' '+(p.taskId||'')).toLowerCase())}"><div class="row"><div class="grow"><h3>${esc(p.name||('Item '+(i+1)))}</h3><div class="meta"><span>${esc(p.source||'Sem referência')}</span><span>atividade ${esc(p.taskId||'—')}</span></div></div><div class="money">${brl(Number(p.estimatedCost)||0)}</div></div><div class="meta" style="margin-top:6px"><span>${qty(p.qty,p.unit)}</span></div></div>`).join(''):'<div class="empty">Nenhum item de compra previsto para este mês.</div>'}</div>`;
+      <div class="list" id="buyListV25">${items.length?items.map((p,i)=>`<div class="item buy-v25-row" data-q="${esc(((p.name||'')+' '+(p.source||'')+' '+(p.unit||'')+' '+(p.taskId||'')).toLowerCase())}"><div class="row"><div class="grow"><h3>${esc(p.name||('Item '+(i+1)))}</h3><div class="meta"><span>${esc(p.source||'Sem referência')}</span><span>atividade ${esc(p.taskId||'—')}</span></div></div><div class="money">${brl(Number(p.estimatedCost)||0)}</div></div><div class="meta" style="margin-top:6px"><span>${qty(p.qty,p.unit)}</span></div></div>`).join(''):'<div class="empty">Nenhum item de compra previsto para este mês.</div>'}</div>`;
   }
 
-  window.filterBuyV23=function(q){q=String(q||'').toLowerCase();document.querySelectorAll('.buy-v23-row').forEach(r=>r.style.display=!q||r.dataset.q.includes(q)?'':'none')};
+  window.filterBuyV25=function(q){q=String(q||'').toLowerCase();document.querySelectorAll('.buy-v25-row').forEach(r=>r.style.display=!q||r.dataset.q.includes(q)?'':'none')};
   window.renderBudget=function(tab,month){
     const implicitCall=arguments.length===0;tab=tab||window.__budgetTab||'summary';
     if(implicitCall&&tab==='buy'&&window.__buyMonthSelecting)return;
     if(tab==='buy'){
-      try{return renderBuy(month)}catch(e){console.error('Compras v23',e);const el=document.getElementById('budget');if(el)el.innerHTML='<div class="empty">Erro ao abrir Compras v23: '+esc(e.message||e)+'</div>';return}
+      try{return renderBuy(month)}catch(e){console.error('Compras v25',e);const el=document.getElementById('budget');if(el)el.innerHTML='<div class="empty">Erro ao abrir Compras v25: '+esc(e.message||e)+'</div>';return}
     }
     return previous(tab,month);
   };
-  window.__buyOverrideV23=true;
+  window.__buyOverrideV25=true;
 })();
