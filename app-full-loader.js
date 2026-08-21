@@ -1,4 +1,4 @@
-// v27 - base completa + reconciliacao de Compras + importacao/exportacao Excel
+// v28 - base completa + reconciliacao de Compras + Excel + edicao direta do orcamento
 (async function(){
   let fullSeed=null;
   const pill=()=>document.getElementById('syncPill');
@@ -6,7 +6,7 @@
   function loadScript(src){return new Promise((resolve,reject)=>{const s=document.createElement('script');s.src=src;s.onload=resolve;s.onerror=()=>reject(new Error('Falha ao carregar '+src));document.head.appendChild(s)})}
   async function loadStaticSeed(){
     setPill('carregando base…');
-    await loadScript('full-seed.js?v=27');
+    await loadScript('full-seed.js?v=28');
     const seed=window.FULL_SEED;
     if(!seed) throw new Error('FULL_SEED não definido');
     if(seed.tasks?.length!==52) throw new Error('atividades: '+(seed.tasks?.length||0));
@@ -26,9 +26,10 @@
       const materialUnit=Number.isFinite(Number(o.materialUnit))?Number(o.materialUnit):(Number(s.materialUnit)||0);
       const laborUnit=Number.isFinite(Number(o.laborUnit))?Number(o.laborUnit):(Number(s.laborUnit)||0);
       const eoUnit=Number.isFinite(Number(o.eoUnit))?Number(o.eoUnit):originalEO;
+      const name=String(o.name??'').trim()||s.name;
       const equipUnit=eoUnit*equipRatio,otherUnit=eoUnit-equipUnit;
       const material=qty*materialUnit,labor=qty*laborUnit,equipment=qty*equipUnit,others=qty*otherUnit,total=material+labor+equipment+others;
-      return {...s,qty,materialUnit,laborUnit,equipUnit,otherUnit,unitCost:materialUnit+laborUnit+eoUnit,material,labor,equipment,others,total,priceStatus:(s.priceStatus||'')+' · editado via Excel'};
+      return {...s,name,qty,materialUnit,laborUnit,equipUnit,otherUnit,unitCost:materialUnit+laborUnit+eoUnit,material,labor,equipment,others,total,priceStatus:'Editado'};
     });
 
     // Quantidade zero = item desativado. Não aparece no aplicativo nem alimenta compras/ABC.
@@ -72,9 +73,8 @@
       const scaled=rows.map(p=>({...p,qty:(Number(p.qty)||0)*scale,estimatedCost:(Number(p.estimatedCost)||0)*scale,unitPrice:Number(p.unitPrice)||0}));
       const scaledTotal=scaled.reduce((sum,p)=>sum+(Number(p.estimatedCost)||0),0);
 
-      // Só mantém abertura analítica quando continua reconciliada com o material do serviço.
       if(rows.length && Math.abs((edited?scaledTotal:analyticalTotal)-material)<=1){out.push(...(edited?scaled:rows));return}
-      out.push({serviceCode:code,taskId:s.taskId,name:s.name||('Serviço '+code),unit:s.unit||'',qty:Number(s.qty)||0,unitPrice:Number(s.materialUnit)||0,estimatedCost:material,source:edited?'Orçamento importado do Excel':'Orçamento/EAP reconciliado',inputCode:''});
+      out.push({serviceCode:code,taskId:s.taskId,name:s.name||('Serviço '+code),unit:s.unit||'',qty:Number(s.qty)||0,unitPrice:Number(s.materialUnit)||0,estimatedCost:material,source:edited?'Orçamento editado':'Orçamento/EAP reconciliado',inputCode:''});
     });
 
     fresh.purchases=out;
@@ -101,14 +101,15 @@
     window.__FULL_SEED=fullSeed;
     state=normalize(state);
     try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}
-    await loadScript('app-buy-helpers-v18.js?v=27');
-    await loadScript('app-budget-v15.js?v=27');
-    await loadScript('app-buy-override-v19.js?v=27');
-    await loadScript('app-filters-v24.js?v=27');
-    await loadScript('app-budget-io-v27.js?v=27');
+    await loadScript('app-buy-helpers-v18.js?v=28');
+    await loadScript('app-budget-v15.js?v=28');
+    await loadScript('app-buy-override-v19.js?v=28');
+    await loadScript('app-filters-v24.js?v=28');
+    await loadScript('app-budget-io-v27.js?v=28');
+    await loadScript('app-budget-edit-v28.js?v=28');
 
     const originalRenderAll=window.renderAll;
     window.renderAll=function(){state=normalize(state);try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){};return originalRenderAll()};
     renderAll();setPill('52 atividades',true);
-  }catch(e){console.error('Falha base v27',e);setPill('base v27 pendente')}
+  }catch(e){console.error('Falha base v28',e);setPill('base v28 pendente')}
 })();
