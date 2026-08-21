@@ -1,1 +1,2 @@
 Reconstruir e publicar o aplicativo completo v04.
+Execução forçada em 21/08/2026 12:19 BRT para corrigir base reduzida.
