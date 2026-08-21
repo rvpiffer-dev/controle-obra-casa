@@ -1,7 +1,13 @@
-name: Publicar app completo v05
+name: Gerar base completa v14
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/restore-full-v04.yml'
+      - 'payload/**'
+      - 'seed-trigger.txt'
 
 permissions:
   contents: write
@@ -12,11 +18,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Reconstruir aplicativo completo
+      - name: Extrair base completa ignorando CRC legado
         run: |
           python - <<'PY'
           from pathlib import Path
-          import base64, gzip
+          import base64, zlib, re, json
 
           parts=[]
           for i in range(1,9):
@@ -25,59 +31,56 @@ jobs:
                   raise SystemExit(f'Arquivo ausente: {p}')
               parts.append(''.join(p.read_text(encoding='utf-8').split()))
 
-          b64=''.join(parts)
-          raw=base64.b64decode(b64, validate=True)
-          html=gzip.decompress(raw).decode('utf-8')
+          raw=base64.b64decode(''.join(parts), validate=True)
+          if len(raw) < 20 or raw[0:2] != b'\x1f\x8b':
+              raise SystemExit('Pacote não possui cabeçalho GZIP válido')
 
-          # Primeiro valida a base técnica que já existe no pacote.
-          for c in ['"id":52','"services":[']:
-              if c not in html:
-                  raise SystemExit(f'Base técnica inválida: não encontrou {c}')
+          # Avança pelo cabeçalho GZIP e ignora apenas CRC/ISIZE finais.
+          pos=10
+          flg=raw[3]
+          if flg & 4:
+              xlen=raw[pos] | (raw[pos+1] << 8)
+              pos += 2 + xlen
+          if flg & 8:
+              while pos < len(raw) and raw[pos] != 0: pos += 1
+              pos += 1
+          if flg & 16:
+              while pos < len(raw) and raw[pos] != 0: pos += 1
+              pos += 1
+          if flg & 2:
+              pos += 2
 
-          # Depois injeta Firebase + gestão v04/v05.
-          tags=[
-              '<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>',
-              '<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>',
-              '<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>',
-              '<script src="app-v04-patch.js?v=6"></script>',
-              '<script src="firebase-sync-v05.js?v=6"></script>'
-          ]
-          for tag in tags:
-              if tag not in html:
-                  html=html.replace('</body>', tag+'\n</body>')
+          html=zlib.decompress(raw[pos:-8], -zlib.MAX_WBITS).decode('utf-8')
+          m=re.search(r'const SEED=(\{[\s\S]*?\});\s*\nconst KEY=', html)
+          if not m:
+              raise SystemExit('SEED completo não encontrado')
 
-          html=html.replace('<title>Controle da Obra</title>','<title>Controle da Obra v05</title>')
-          Path('index.html').write_text(html,encoding='utf-8')
-          print('index.html reconstruído:', len(html), 'bytes')
+          seed=json.loads(m.group(1))
+          checks={
+              'tasks':52,
+              'services':204,
+              'purchases':313,
+              'abc':136,
+          }
+          for k,n in checks.items():
+              got=len(seed.get(k,[]))
+              if got != n:
+                  raise SystemExit(f'{k}: esperado {n}, encontrado {got}')
+
+          out='window.FULL_SEED='+json.dumps(seed,ensure_ascii=False,separators=(',',':'))+';\n'
+          Path('full-seed.js').write_text(out,encoding='utf-8')
+          print('BASE OK:', {k:len(seed[k]) for k in checks})
+          print('full-seed.js:', len(out.encode('utf-8')), 'bytes')
           PY
 
-      - name: Conferir versão publicada
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          s=Path('index.html').read_text(encoding='utf-8')
-          checks=[
-              '"id":52',
-              '"services":[',
-              'firebase-app-compat.js',
-              'firebase-auth-compat.js',
-              'firebase-firestore-compat.js',
-              'app-v04-patch.js?v=6',
-              'firebase-sync-v05.js?v=6'
-          ]
-          for c in checks:
-              assert c in s, f'Falhou validação: {c}'
-          print('VALIDAÇÃO OK — base completa + Firebase')
-          PY
-
-      - name: Publicar no branch main
+      - name: Publicar base textual no main
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html
+          git add full-seed.js
           if git diff --cached --quiet; then
-            echo "index.html já está atualizado"
+            echo "full-seed.js já está atualizado"
           else
-            git commit -m "Publica aplicativo completo v05 [skip ci]"
+            git commit -m "Gera base completa textual v14 [skip ci]"
             git push
           fi
