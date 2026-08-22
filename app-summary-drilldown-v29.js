@@ -1,4 +1,4 @@
-// v31 - drill-down do Resumo + carregamento isolado do painel de gestão e cronograma físico-financeiro
+// v32 - drill-down do Resumo + gestão + físico-financeiro + melhorias visuais
 (function(){
   const previous=window.renderBudget;
   const esc=v=>String(v??'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]));
@@ -46,16 +46,26 @@
   try{if((window.__budgetTab||'summary')==='summary')decorateSummary()}catch(e){console.error(e)}
   window.__summaryDrilldownV29=true;
 
+  function loadUIV32(){
+    if(window.__uiV32)return;
+    const u=document.createElement('script');
+    u.src='app-ui-v32.js?v=32';
+    u.onerror=()=>console.error('Falha ao carregar melhorias visuais v32');
+    document.head.appendChild(u);
+  }
+
   if(!window.__managementV30){
     const s=document.createElement('script');
-    s.src='app-management-v30.js?v=31';
+    s.src='app-management-v30.js?v=32';
     s.onerror=()=>console.error('Falha ao carregar painel de gestão v30');
     document.head.appendChild(s);
   }
+
   if(!window.__physicalFinancialV31){
     const s=document.createElement('script');
-    s.src='app-physical-financial-v31.js?v=31';
-    s.onerror=()=>console.error('Falha ao carregar cronograma físico-financeiro v31');
+    s.src='app-physical-financial-v31.js?v=32';
+    s.onload=loadUIV32;
+    s.onerror=()=>{console.error('Falha ao carregar cronograma físico-financeiro v31');loadUIV32()};
     document.head.appendChild(s);
-  }
+  }else loadUIV32();
 })();
