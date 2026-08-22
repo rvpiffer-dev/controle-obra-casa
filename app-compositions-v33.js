@@ -1,0 +1,45 @@
+// v33 - composicao do servico dentro da ficha de edicao
+(function(){
+  if(window.__compositionsV33)return;
+  const oldOpen=window.openBudgetEditV28;
+  const esc=v=>String(v??'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]));
+  const qfmt=(v,u)=>`${Number(v||0).toLocaleString('pt-BR',{maximumFractionDigits:4})}${u?' '+esc(u):''}`;
+  const isDup=p=>String(p.serviceCode||'')==='04.01'&&String(p.source||'').toLowerCase()==='sinapi analítico'&&['34586','34649','34788'].includes(String(p.inputCode||''));
+  const style=document.createElement('style');
+  style.textContent=`.comp-v33{margin-top:14px}.comp-v33 h3{font-size:14px;margin:0 0 8px}.comp-grid-v33{display:grid;grid-template-columns:1fr 1fr;gap:7px}.comp-row-v33{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);font-size:12px}.comp-row-v33 small{color:var(--muted)}.comp-ins-v33{padding:8px 0;border-bottom:1px solid var(--line)}.comp-ins-v33 b{font-size:12px}.comp-ins-v33 .meta{margin-top:3px}.comp-source-v33{background:#f7f9fb;border:1px solid var(--line);border-radius:10px;padding:10px;margin-top:8px}`;
+  document.head.appendChild(style);
+
+  function service(code){return (state.services||[]).find(s=>String(s.code||'')===String(code))}
+  function rawInputs(code){
+    const rows=(window.__FULL_SEED?.purchases||[]).filter(p=>String(p.serviceCode||'')===String(code)&&!isDup(p));
+    const base=(window.__FULL_SEED?.services||[]).find(s=>String(s.code||'')===String(code));
+    const cur=service(code);const scale=(Number(base?.qty)||0)>0?(Number(cur?.qty)||0)/(Number(base.qty)||1):1;
+    return rows.map(p=>({...p,qty:(Number(p.qty)||0)*scale,estimatedCost:(Number(p.estimatedCost)||0)*scale}));
+  }
+  function componentHtml(s){
+    const items=[['Material',s.material],['Mão de obra',s.labor],['Equipamento',s.equipment],['Outros',s.others]].filter(x=>Number(x[1])>0);
+    const total=Number(s.total)||1;
+    return `<div class="comp-grid-v33">${items.map(([n,v])=>`<div class="mini"><small>${esc(n)}</small><b>${brl(v)}</b><small>${(Number(v)/total*100).toLocaleString('pt-BR',{maximumFractionDigits:1})}%</small></div>`).join('')}</div>`;
+  }
+  function inputsHtml(code){
+    const rows=rawInputs(code);
+    if(!rows.length)return `<div class="comp-source-v33"><b>Sem insumos individualizados na base atual.</b><div class="meta"><span>O serviço está armazenado apenas com a composição econômico-financeira consolidada.</span></div></div>`;
+    return `<div>${rows.map(p=>`<div class="comp-ins-v33"><div class="row"><div class="grow"><b>${esc(p.name||'Insumo')}</b><div class="meta"><span>${qfmt(p.qty,p.unit)}</span>${p.inputCode?`<span>cód. ${esc(p.inputCode)}</span>`:''}</div></div><div class="money">${brl(p.estimatedCost||0)}</div></div><div class="meta"><span>${esc(p.source||'Fonte não informada')}</span>${Number(p.unitPrice)>0?`<span>${brl(p.unitPrice)}/${esc(p.unit||'un')}</span>`:''}</div></div>`).join('')}</div>`;
+  }
+  function sourceHtml(s,code){
+    const base=(window.__FULL_SEED?.services||[]).find(x=>String(x.code||'')===String(code))||s;
+    const ref=base.reference||base.sourceCode||base.sinapiCode||base.codeRef||'';
+    const src=base.source||base.priceSource||base.priceStatus||base.referenceSource||'';
+    if(!ref&&!src)return '';
+    return `<div class="comp-source-v33"><div class="meta">${ref?`<span><b>Referência:</b> ${esc(ref)}</span>`:''}${src?`<span><b>Fonte:</b> ${esc(src)}</span>`:''}</div></div>`;
+  }
+  window.openBudgetEditV28=function(code){
+    oldOpen(code);
+    const s=service(code),sheet=document.getElementById('sheet');if(!s||!sheet)return;
+    const actions=sheet.querySelector('.actions');if(!actions)return;
+    const block=document.createElement('div');block.className='comp-v33';
+    block.innerHTML=`<div class="sep"></div><h3>Composição do serviço</h3>${componentHtml(s)}${sourceHtml(s,code)}<details open><summary>Insumos conhecidos</summary><div class="inside">${inputsHtml(code)}</div></details><div class="meta"><span>Quando a fonte estiver fechada no SINAPI/EAP, o app mostra apenas o nível realmente armazenado na base e não inventa profissionais ou coeficientes.</span></div>`;
+    actions.parentNode.insertBefore(block,actions);
+  };
+  window.__compositionsV33=true;
+})();
