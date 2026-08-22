@@ -1,0 +1,10 @@
+VERSÃO v32 — Interface do cronograma e orçamento
+Data: 22/08/2026
+
+- Filtros recolhidos por padrão em Cronograma, Orçamento Detalhado e Curva ABC.
+- Botão Filtros no canto direito do título abre/fecha os controles.
+- Orçamento Detalhado agrupado visualmente por macroetapa, seguindo a estrutura do orçamento Excel.
+- Cabeçalho de cada etapa mostra código, nome e subtotal da etapa exibida.
+- Ordenação por valor é feita dentro de cada etapa, sem misturar macroetapas.
+- Mantidos edição direta, drill-down do Resumo, Excel, Compras, Curva ABC e cronograma físico-financeiro.
+- Versão estável v29 permanece preservada na branch versao-estavel-v29.
