@@ -1,0 +1,10 @@
+v35 - Gestão de serviços do orçamento
+
+- Adicionar novos serviços pelo Orçamento Detalhado.
+- Código único, etapa, unidade, quantidade e preços unitários.
+- Vínculo opcional com atividade do cronograma.
+- Código SINAPI/referência opcional no cadastro.
+- Retirada lógica de serviços sem apagar histórico.
+- Lista de serviços retirados com reativação.
+- Serviços novos recalculam orçamento, macroetapas, ABC, compras e cronograma quando vinculados.
+- Composições exibem código SINAPI quando disponível na base.
