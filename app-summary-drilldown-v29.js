@@ -1,4 +1,4 @@
-// v37 - drill-down + gestão + físico-financeiro + UI + composições + exportação + serviços + composição na lista
+// v38 - drill-down + gestão + físico-financeiro + UI + composições + exportação + serviços + composição na lista + busca SINAPI
 (function(){
   const previous=window.renderBudget;
   const esc=v=>String(v??'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]));
@@ -11,11 +11,12 @@
   try{if((window.__budgetTab||'summary')==='summary')decorateSummary()}catch(e){console.error(e)}
   window.__summaryDrilldownV29=true;
   function load(src,flag,msg){if(window[flag])return;const s=document.createElement('script');s.src=src;s.onerror=()=>console.error(msg);document.head.appendChild(s)}
-  load('app-management-v30.js?v=37','__managementV30','Falha ao carregar painel de gestão v30');
-  load('app-physical-financial-v31.js?v=37','__physicalFinancialV31','Falha ao carregar cronograma físico-financeiro v31');
-  load('app-ui-v32.js?v=37','__uiV32','Falha ao carregar melhorias visuais v32');
-  load('app-compositions-v33.js?v=37','__compositionsV33','Falha ao carregar composições v36');
-  load('app-budget-export-v34.js?v=37','__budgetExportV34','Falha ao carregar exportação v34');
-  load('app-service-manager-v35.js?v=37','__serviceManagerV35','Falha ao carregar gerenciador de serviços v35');
-  load('app-detail-composition-v37.js?v=37','__detailCompositionV37','Falha ao carregar composição na lista v37');
+  load('app-management-v30.js?v=38','__managementV30','Falha ao carregar painel de gestão v30');
+  load('app-physical-financial-v31.js?v=38','__physicalFinancialV31','Falha ao carregar cronograma físico-financeiro v31');
+  load('app-ui-v32.js?v=38','__uiV32','Falha ao carregar melhorias visuais v32');
+  load('app-compositions-v33.js?v=38','__compositionsV33','Falha ao carregar composições v36');
+  load('app-budget-export-v34.js?v=38','__budgetExportV34','Falha ao carregar exportação v34');
+  load('app-service-manager-v35.js?v=38','__serviceManagerV35','Falha ao carregar gerenciador de serviços v35');
+  load('app-detail-composition-v37.js?v=38','__detailCompositionV37','Falha ao carregar composição na lista v37');
+  load('app-sinapi-v38.js?v=38','__sinapiV38','Falha ao carregar busca SINAPI v38');
 })();
