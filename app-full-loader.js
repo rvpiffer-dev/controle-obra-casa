@@ -1,4 +1,4 @@
-// v29 - base completa + reconciliacao de Compras + Excel + edicao direta + drill-down do resumo
+// v35 - base completa + reconciliacao + orcamento editavel com inclusao de servicos
 (async function(){
   let fullSeed=null;
   const pill=()=>document.getElementById('syncPill');
@@ -6,7 +6,7 @@
   function loadScript(src){return new Promise((resolve,reject)=>{const s=document.createElement('script');s.src=src;s.onload=resolve;s.onerror=()=>reject(new Error('Falha ao carregar '+src));document.head.appendChild(s)})}
   async function loadStaticSeed(){
     setPill('carregando base…');
-    await loadScript('full-seed.js?v=29');
+    await loadScript('full-seed.js?v=35');
     const seed=window.FULL_SEED;
     if(!seed) throw new Error('FULL_SEED não definido');
     if(seed.tasks?.length!==52) throw new Error('atividades: '+(seed.tasks?.length||0));
@@ -41,7 +41,7 @@
     const projectTotal=(fresh.services||[]).reduce((sum,s)=>sum+(Number(s.total)||0),0);
     fresh.project={...(fresh.project||{}),budget:projectTotal};
     const taskTotals=new Map();
-    (fresh.services||[]).forEach(s=>taskTotals.set(String(s.taskId), (taskTotals.get(String(s.taskId))||0)+(Number(s.total)||0)));
+    (fresh.services||[]).forEach(s=>{if(s.taskId!=null)taskTotals.set(String(s.taskId),(taskTotals.get(String(s.taskId))||0)+(Number(s.total)||0))});
     fresh.tasks=(fresh.tasks||[]).map(t=>({...t,plannedCost:taskTotals.get(String(t.id))||0}));
     const abcRows=(fresh.services||[]).filter(s=>(Number(s.total)||0)>0).sort((a,b)=>(Number(b.total)||0)-(Number(a.total)||0));
     let cum=0;fresh.abc=abcRows.map((s,i)=>{const part=projectTotal?(Number(s.total)||0)/projectTotal:0;cum+=part;return{rank:i+1,code:s.code,macro:s.macro,name:s.name,unit:s.unit,qty:s.qty,total:s.total,pct:part,cumPct:cum,class:cum<=.80?'A':cum<=.95?'B':'C'}});
@@ -52,21 +52,19 @@
     const byCode=new Map();
     (fullSeed?.purchases||[]).forEach(p=>{
       const code=String(p.serviceCode||'');
-      if(code==='04.01' && String(p.source||'').toLowerCase()==='sinapi analítico' && ['34586','34649','34788'].includes(String(p.inputCode||''))) return;
-      if(!byCode.has(code))byCode.set(code,[]);
-      byCode.get(code).push({...p});
+      if(code==='04.01'&&String(p.source||'').toLowerCase()==='sinapi analítico'&&['34586','34649','34788'].includes(String(p.inputCode||'')))return;
+      if(!byCode.has(code))byCode.set(code,[]);byCode.get(code).push({...p});
     });
     const out=[];
     (fresh.services||[]).forEach(s=>{
       const code=String(s.code||''),material=Number(s.material)||0;if(material<=0)return;
       const rows=byCode.get(code)||[],analyticalTotal=rows.reduce((sum,p)=>sum+(Number(p.estimatedCost)||0),0);
       const base=fullSeed?.services?.find(x=>String(x.code||'')===code),edited=!!fresh.budgetOverrides?.[code];
-      const baseQty=Number(base?.qty)||0,qty=Number(s.qty)||0;
-      const scale=baseQty>0?qty/baseQty:1;
+      const baseQty=Number(base?.qty)||0,qty=Number(s.qty)||0,scale=baseQty>0?qty/baseQty:1;
       const scaled=rows.map(p=>({...p,qty:(Number(p.qty)||0)*scale,estimatedCost:(Number(p.estimatedCost)||0)*scale,unitPrice:Number(p.unitPrice)||0}));
       const scaledTotal=scaled.reduce((sum,p)=>sum+(Number(p.estimatedCost)||0),0);
-      if(rows.length && Math.abs((edited?scaledTotal:analyticalTotal)-material)<=1){out.push(...(edited?scaled:rows));return}
-      out.push({serviceCode:code,taskId:s.taskId,name:s.name||('Serviço '+code),unit:s.unit||'',qty:Number(s.qty)||0,unitPrice:Number(s.materialUnit)||0,estimatedCost:material,source:edited?'Orçamento editado':'Orçamento/EAP reconciliado',inputCode:''});
+      if(rows.length&&Math.abs((edited?scaledTotal:analyticalTotal)-material)<=1){out.push(...(edited?scaled:rows));return}
+      out.push({serviceCode:code,taskId:s.taskId,name:s.name||('Serviço '+code),unit:s.unit||'',qty:Number(s.qty)||0,unitPrice:Number(s.materialUnit)||0,estimatedCost:material,source:s.addedByUser?'Serviço adicionado no orçamento':edited?'Orçamento editado':'Orçamento/EAP reconciliado',inputCode:''});
     });
     fresh.purchases=out;
     fresh.purchaseAudit={rawCount:(fullSeed?.purchases||[]).length,reconciledCount:out.length,materialTotal:(fresh.services||[]).reduce((sum,s)=>sum+(Number(s.material)||0),0),purchaseTotal:out.reduce((sum,p)=>sum+(Number(p.estimatedCost)||0),0)};
@@ -79,7 +77,10 @@
     fresh.costs=Array.isArray(r.costs)?r.costs:[];
     fresh.purchasePlan=(r.purchasePlan&&typeof r.purchasePlan==='object')?r.purchasePlan:{};
     fresh.budgetOverrides=(r.budgetOverrides&&typeof r.budgetOverrides==='object')?r.budgetOverrides:{};
+    fresh.addedServices=Array.isArray(r.addedServices)?r.addedServices:[];
     fresh.budgetImportMeta=r.budgetImportMeta||null;
+    const existing=new Set((fresh.services||[]).map(s=>String(s.code||'')));
+    fresh.addedServices.forEach(s=>{if(s&&s.code&&!existing.has(String(s.code))){fresh.services.push({...s,addedByUser:true});existing.add(String(s.code))}});
     applyBudgetOverrides(fresh,fresh.budgetOverrides);
     const oldTasks=new Map((r.tasks||[]).map(t=>[t.id,t]));
     fresh.tasks=(fresh.tasks||[]).map(t=>{const o=oldTasks.get(t.id);return o?{...t,progress:+o.progress||0,notes:o.notes||''}:t});
@@ -88,19 +89,17 @@
     return reconcilePurchases(fresh);
   }
   try{
-    fullSeed=await loadStaticSeed();
-    window.__FULL_SEED=fullSeed;
-    state=normalize(state);
+    fullSeed=await loadStaticSeed();window.__FULL_SEED=fullSeed;state=normalize(state);
     try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}
-    await loadScript('app-buy-helpers-v18.js?v=29');
-    await loadScript('app-budget-v15.js?v=29');
-    await loadScript('app-buy-override-v19.js?v=29');
-    await loadScript('app-filters-v24.js?v=29');
-    await loadScript('app-budget-io-v27.js?v=29');
-    await loadScript('app-budget-edit-v28.js?v=29');
-    await loadScript('app-summary-drilldown-v29.js?v=29');
+    await loadScript('app-buy-helpers-v18.js?v=35');
+    await loadScript('app-budget-v15.js?v=35');
+    await loadScript('app-buy-override-v19.js?v=35');
+    await loadScript('app-filters-v24.js?v=35');
+    await loadScript('app-budget-io-v27.js?v=35');
+    await loadScript('app-budget-edit-v28.js?v=35');
+    await loadScript('app-summary-drilldown-v29.js?v=35');
     const originalRenderAll=window.renderAll;
     window.renderAll=function(){state=normalize(state);try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){};return originalRenderAll()};
     renderAll();setPill('52 atividades',true);
-  }catch(e){console.error('Falha base v29',e);setPill('base v29 pendente')}
+  }catch(e){console.error('Falha base v35',e);setPill('base v35 pendente')}
 })();
