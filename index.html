@@ -68,5 +68,5 @@ function renderPLS(){pls.innerHTML=`<div class="section-title">Medições PLS</d
 function renderBudget(){budget.innerHTML=`<div class="section-title">Orçamento</div><div class="card">A versão detalhada do orçamento será sincronizada depois da validação do login. Base atual: <b>${brl(state.project.budget)}</b>.</div>`}function renderSettings(){settings.innerHTML=`<div class="section-title">Conta e sincronização</div><div class="card"><p>Os dados são sincronizados no Firestore e mantidos também neste aparelho para uso offline.</p><button class="btn alt" onclick="logoutFirebase()">Sair da conta</button></div>`}
 function openModal(h){sheet.innerHTML=h;modal.classList.add('open')}function closeModal(){modal.classList.remove('open')}modal.addEventListener('click',e=>{if(e.target.id==='modal')closeModal()});function go(p){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));document.getElementById(p).classList.add('active');document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('active',x.dataset.page===p));renderAll();scrollTo(0,0)}document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>go(b.dataset.page));renderAll();
 </script><script src="app-v04-patch.js?v=4"></script>
-<script src="app-full-loader.js?v=1"></script>
+<script src="app-full-loader.js?v=43"></script>
 </body></html>
