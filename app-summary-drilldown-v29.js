@@ -1,4 +1,4 @@
-// v33 - drill-down do Resumo + gestão + físico-financeiro + melhorias visuais + composições
+// v34 - drill-down do Resumo + gestão + físico-financeiro + melhorias visuais + composições + exportação robusta
 (function(){
   const previous=window.renderBudget;
   const esc=v=>String(v??'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]));
@@ -23,8 +23,9 @@
   window.__summaryDrilldownV29=true;
 
   function load(src,flag,msg){if(window[flag])return;const s=document.createElement('script');s.src=src;s.onerror=()=>console.error(msg);document.head.appendChild(s)}
-  load('app-management-v30.js?v=33','__managementV30','Falha ao carregar painel de gestão v30');
-  load('app-physical-financial-v31.js?v=33','__physicalFinancialV31','Falha ao carregar cronograma físico-financeiro v31');
-  load('app-ui-v32.js?v=33','__uiV32','Falha ao carregar melhorias visuais v32');
-  load('app-compositions-v33.js?v=33','__compositionsV33','Falha ao carregar composições v33');
+  load('app-management-v30.js?v=34','__managementV30','Falha ao carregar painel de gestão v30');
+  load('app-physical-financial-v31.js?v=34','__physicalFinancialV31','Falha ao carregar cronograma físico-financeiro v31');
+  load('app-ui-v32.js?v=34','__uiV32','Falha ao carregar melhorias visuais v32');
+  load('app-compositions-v33.js?v=34','__compositionsV33','Falha ao carregar composições v33');
+  load('app-budget-export-v34.js?v=34','__budgetExportV34','Falha ao carregar exportação v34');
 })();
