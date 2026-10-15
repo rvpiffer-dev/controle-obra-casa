@@ -4,10 +4,25 @@
   const esc=v=>String(v??'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]));
   const norm=v=>String(v??'').toLowerCase();
   const monthKey=d=>String(d||'').slice(0,7);
+  // Duração planejada de cada atividade (prioriza o valor do planejamento, inclusive frações de dia).
+  function taskDurationLabel(t){
+    let n=Number(t.duration);
+    if(!(Number.isFinite(n)&&n>0)){
+      const a=/^\d{4}-\d{2}-\d{2}$/.test(String(t.start||''))?Date.parse(t.start+'T12:00:00Z'):NaN;
+      const b=/^\d{4}-\d{2}-\d{2}$/.test(String(t.finish||''))?Date.parse(t.finish+'T12:00:00Z'):NaN;
+      if(!Number.isFinite(a)||!Number.isFinite(b)||b<a)return 'Duração não definida';
+      n=0;
+      for(let ts=a;ts<=b;ts+=86400000){const day=new Date(ts).getUTCDay();if(day!==0&&day!==6)n++}
+      n=Math.max(1,n);
+    }
+    const value=n.toLocaleString('pt-BR',{maximumFractionDigits:2});
+    return 'Duração: '+value+(n===1?' dia útil':' dias úteis');
+  }
+
   const monthLabel=k=>{if(!k)return '—';const [y,m]=k.split('-');return new Intl.DateTimeFormat('pt-BR',{month:'short',year:'numeric'}).format(new Date(+y,+m-1,1))};
 
   const style=document.createElement('style');
-  style.textContent=`.filter-grid-v24{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.filter-grid-v24 .wide{grid-column:1/-1}.filter-actions-v24{display:flex;gap:7px;align-items:end}.filter-actions-v24 button{width:100%}.abc-switch-v24{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:8px 0}.abc-switch-v24 button{border:1px solid var(--line);background:#fff;color:var(--blue);border-radius:10px;padding:10px;font-weight:750}.abc-switch-v24 button.on{background:var(--blue);color:#fff}.filter-count-v24{font-size:11px;color:var(--muted);margin:7px 2px}.abc-v24-row[hidden],.schedule-v24-row[hidden],.detail-v24-row[hidden]{display:none!important}@media(max-width:420px){.filter-grid-v24{grid-template-columns:1fr}}`;
+  style.textContent=`.filter-grid-v24{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.filter-grid-v24 .wide{grid-column:1/-1}.filter-actions-v24{display:flex;gap:7px;align-items:end}.filter-actions-v24 button{width:100%}.abc-switch-v24{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:8px 0}.abc-switch-v24 button{border:1px solid var(--line);background:#fff;color:var(--blue);border-radius:10px;padding:10px;font-weight:750}.abc-switch-v24 button.on{background:var(--blue);color:#fff}.filter-count-v24{font-size:11px;color:var(--muted);margin:7px 2px}.abc-v24-row[hidden],.schedule-v24-row[hidden],.detail-v24-row[hidden]{display:none!important}.schedule-duration-v47{display:inline-flex;align-items:center;font-weight:750;color:var(--blue);background:#e9eff5;padding:3px 8px;border-radius:7px;white-space:nowrap}@media(max-width:420px){.filter-grid-v24{grid-template-columns:1fr}}`;
   document.head.appendChild(style);
 
   // ---------------- CRONOGRAMA ----------------
@@ -49,7 +64,7 @@
         <div><label>Mês</label><select id="schMonth24" onchange="scheduleApplyFiltersV24()"><option value="all">Todos</option>${months.map(x=>`<option value="${x}" ${f.month===x?'selected':''}>${monthLabel(x)}</option>`).join('')}</select></div>
         <div class="filter-actions-v24"><button class="btn alt" onclick="scheduleClearFiltersV24()">Limpar filtros</button></div>
       </div></div>
-      <div class="list" style="margin-top:10px">${tasks.map(x=>`<div class="item schedule-v24-row" data-q="${esc(norm(x.id+' '+x.name+' '+x.phase+' '+x.resource))}" data-phase="${esc(x.phase||'')}" data-progress="${+x.progress||0}" data-start="${monthKey(x.start)}" data-finish="${monthKey(x.finish)||monthKey(x.start)}" onclick="taskForm(${x.id})"><div class="row"><div class="grow"><h3>${x.id}. ${esc(x.name)}</h3><div class="meta"><span>${esc(x.phase)}</span><span>${date(x.start)} → ${date(x.finish)}</span><span>${esc(x.resource||'')}</span></div></div><span class="badge ${x.progress>=1?'ok':x.progress>0?'warn':''}">${pct(x.progress)}</span></div><div class="progress" style="margin-top:8px"><i style="width:${Math.max(0,Math.min(100,(+x.progress||0)*100))}%"></i></div></div>`).join('')}</div>`;
+      <div class="list" style="margin-top:10px">${tasks.map(x=>`<div class="item schedule-v24-row" data-q="${esc(norm(x.id+' '+x.name+' '+x.phase+' '+x.resource))}" data-phase="${esc(x.phase||'')}" data-progress="${+x.progress||0}" data-start="${monthKey(x.start)}" data-finish="${monthKey(x.finish)||monthKey(x.start)}" onclick="taskForm(${x.id})"><div class="row"><div class="grow"><h3>${x.id}. ${esc(x.name)}</h3><div class="meta"><span>${esc(x.phase)}</span><span>${date(x.start)} → ${date(x.finish)}</span><span class="schedule-duration-v47">${esc(taskDurationLabel(x))}</span><span>${esc(x.resource||'')}</span></div></div><span class="badge ${x.progress>=1?'ok':x.progress>0?'warn':''}">${pct(x.progress)}</span></div><div class="progress" style="margin-top:8px"><i style="width:${Math.max(0,Math.min(100,(+x.progress||0)*100))}%"></i></div></div>`).join('')}</div>`;
     scheduleApplyFiltersV24();
   };
 
