@@ -1,0 +1,1 @@
+(function(root){'use strict';root.EngefexEnvironment=Object.freeze({name:'casa',label:'Casa Ramon e Talita',url:'',key:'',storageKey:key=>'casa-ramon-talita-'+key});document.documentElement.dataset.environment='casa';})(window);
