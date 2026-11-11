@@ -148,17 +148,17 @@
     @media(prefers-reduced-motion:reduce){#engefex-cloud-connecting:before{animation:none}}
   `;
   document.head.append(style);
-  cover=document.createElement('div');cover.id='engefex-cloud-cover';cover.setAttribute('role','dialog');cover.setAttribute('aria-modal','true');cover.setAttribute('aria-label','Acesso ao Gerenciador Engefex');
+  cover=document.createElement('div');cover.id='engefex-cloud-cover';cover.setAttribute('role','dialog');cover.setAttribute('aria-modal','true');cover.setAttribute('aria-label','Acesso à obra da casa');
   cover.innerHTML=String.raw`
   <div class="engefex-cloud-panel">
-    <img class="engefex-cloud-logo" src="engefex-logo.png" alt="Engefex Engenharia e Estruturas Metálicas" width="469" height="364"><h1>Gerenciamento Engefex</h1>
+    <img class="engefex-cloud-logo" src="engefex-logo.png" alt="Engefex Engenharia e Estruturas Metálicas" width="469" height="364"><h1>Casa Ramon e Talita</h1>
     <p>Base compartilhada de obras, orçamento, cronograma e diário.</p>
     <div id="engefex-cloud-view">
      <div data-cloud-panel="login">
       <form id="engefex-cloud-login"><label for="engefex-cloud-email">E-mail</label><input id="engefex-cloud-email" type="email" autocomplete="username" required>
       <label for="engefex-cloud-password">Senha</label><input id="engefex-cloud-password" type="password" autocomplete="current-password" required>
       <button type="submit">Entrar</button></form>
-      <p><small>O administrador precisa cadastrar sua conta e vinculá-la à área de trabalho da Engefex no Supabase.</small></p>
+      <button type="button" id="casa-signup" class="secondary">Criar meu acesso</button><p><small>Primeiro acesso do Ramon com rvpiffer@gmail.com. Use uma senha para este sistema e confirme o e-mail recebido. Depois, entre por esta página.</small></p><p><a href="../sistema-anterior.html">Abrir sistema anterior</a></p>
      </div>
      <div data-cloud-panel="error" hidden>
       <p>A edição está bloqueada até resolver a comunicação com o banco. Dados ainda não confirmados continuam guardados neste aparelho.</p>
@@ -182,6 +182,15 @@
    try{setMessage('Entrando na sua conta…');await login($('engefex-cloud-email').value.trim(),$('engefex-cloud-password').value);$('engefex-cloud-password').value=''}
    catch(e){saveSession(null);setPhase('login',e.message)}finally{button.disabled=false;button.textContent=label}
   });
+  $('casa-signup').onclick=async event=>{
+   const email=$('engefex-cloud-email').value.trim().toLowerCase();
+   const password=$('engefex-cloud-password').value;
+   if(email!=='rvpiffer@gmail.com'){setMessage('O primeiro acesso deve usar rvpiffer@gmail.com. Outros usuários podem ser cadastrados pelo administrador.');return;}
+   if(password.length<8){setMessage('Escolha uma senha com pelo menos 8 caracteres.');return;}
+   const button=event.currentTarget;button.disabled=true;
+   try{await raw('/auth/v1/signup',{method:'POST',json:true,auth:false,body:{email,password,data:{nome:'Ramon'}}});$('engefex-cloud-password').value='';setMessage('Confirme o e-mail recebido do Supabase. Depois volte a esta página e entre com sua senha.');}
+   catch(e){setMessage(e.message)}finally{button.disabled=false;}
+  };
   $('engefex-cloud-export').onclick=()=>{if(!exportDraft())client?.exportBackup()};
   $('engefex-cloud-retry').onclick=()=>activeDraft?retryPending():connect().catch(e=>setPhase('error',e.message));
   $('engefex-cloud-retry-save').onclick=()=>retryPending();
@@ -297,6 +306,7 @@
  async function connect(){
   const generation=authGeneration;
   setPhase('loading');
+  await raw('/rest/v1/rpc/casa_initialize_access',{method:'POST',json:true,body:{}});
   const memberships=await raw('/rest/v1/engefex_members?select=workspace_id&limit=2');
   if(generation!==authGeneration)return;
   if(!Array.isArray(memberships)||memberships.length!==1)throw Error('A conta precisa estar vinculada a exatamente uma área de trabalho. Peça ao administrador para executar o SQL de autorização dos usuários.');
