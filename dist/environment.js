@@ -1,0 +1,1 @@
+(function(root){'use strict';const config={"name": "casa", "label": "Casa Ramon e Talita", "url": "https://cjbmycubcfmenuqjjcnt.supabase.co", "key": "sb_publishable_aue1jg6Ef1PWrMX2j0GrnQ_rBffBdqR"};root.EngefexEnvironment=Object.freeze({...config,storageKey:key=>'casa-ramon-talita-'+key});document.documentElement.dataset.environment='casa';})(window);
