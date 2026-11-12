@@ -1,0 +1,9 @@
+.casa-actions{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.casa-actions .button{font-size:13px;padding:9px 12px}
+.casa-feature-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px}
+.casa-feature-heading h1{font-size:24px;margin:0}
+.casa-feature iframe{display:block;width:100%;min-height:900px;height:calc(100vh - 230px);border:0;background:transparent}
+.casa-error{color:#a32626;background:#fff0f0;border-color:#e8bcbc}
+.casa-budget-filters{margin:12px 0;padding:12px;border:1px solid #dce2e9;border-radius:8px}
+.casa-filter-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:12px}
+@media(max-width:650px){.casa-feature-heading h1{font-size:20px}.casa-feature iframe{min-height:calc(100dvh - 180px)}}
