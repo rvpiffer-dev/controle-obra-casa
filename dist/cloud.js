@@ -1,4 +1,4 @@
-/* Engefex Cloud: acesso autenticado ao workspace privado no Supabase.
+/* Vertix Cloud: acesso autenticado ao workspace privado no Supabase.
  * A publishable key identifica o projeto; acesso aos dados depende das políticas RLS.
  * Não incluir aqui service_role, sb_secret ou senha do banco.
  */
@@ -101,9 +101,9 @@
  function exportDraft(){
   const draft=activeDraft||loadDraft();
   if(!draft)return false;
-  const body=JSON.stringify({format:'engefex-rascunho-v1',project:'Engefex',workspace,created_at:draft.created_at,revision:draft.revision,changes:draft.changes},null,2);
+  const body=JSON.stringify({format:'engefex-rascunho-v1',project:'Vertix',workspace,created_at:draft.created_at,revision:draft.revision,changes:draft.changes},null,2);
   const url=URL.createObjectURL(new Blob([body],{type:'application/json'}));
-  const a=document.createElement('a');a.href=url;a.download='engefex-rascunho-nao-confirmado.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),60000);
+  const a=document.createElement('a');a.href=url;a.download='vertix-rascunho-nao-confirmado.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),60000);
   return true;
  }
  function setPhase(next,note){
@@ -125,13 +125,13 @@
   const style=document.createElement('style');
   style.textContent=String.raw`
     .engefex-cloud-locked body{overflow:hidden}
-    #engefex-cloud-cover{position:fixed;inset:0;z-index:2147483640;background:#111111;color:#f6f9fc;overflow:auto;display:flex;align-items:center;justify-content:center;padding:18px;font-family:system-ui,-apple-system,Segoe UI,sans-serif}
+    #engefex-cloud-cover{position:fixed;inset:0;z-index:2147483640;background:#042136;color:#f6f9fc;overflow:auto;display:flex;align-items:center;justify-content:center;padding:18px;font-family:system-ui,-apple-system,Segoe UI,sans-serif}
     #engefex-cloud-cover[hidden]{display:none}
     .engefex-cloud-panel{background:#fff;color:#26384a;max-width:560px;width:100%;border-radius:18px;padding:30px;box-shadow:0 20px 60px #0018}
     .engefex-cloud-logo{display:block;width:220px;max-width:80%;height:auto;margin:0 auto 22px}.engefex-cloud-panel h1{font-size:1.45rem;margin:0 0 6px}.engefex-cloud-panel p{line-height:1.55}
     .engefex-cloud-panel label{display:block;margin:12px 0 5px;font-weight:600}
     .engefex-cloud-panel input{width:100%;box-sizing:border-box;padding:13px;border:1px solid #b9c6d2;border-radius:8px;font-size:16px}
-    .engefex-cloud-panel button{border:0;border-radius:9px;background:#1557ff;color:white;padding:12px 16px;margin:8px 8px 0 0;cursor:pointer;font-weight:650}
+    .engefex-cloud-panel button{border:0;border-radius:9px;background:#14516a;color:white;padding:12px 16px;margin:8px 8px 0 0;cursor:pointer;font-weight:650}
     .engefex-cloud-panel button:disabled{opacity:.5;cursor:wait}
     .engefex-cloud-panel button.secondary{color:#174bd2;background:#edf2ff}
     #engefex-cloud-message{white-space:pre-wrap;color:#9f2b21;font-weight:650;margin-top:14px}
@@ -151,7 +151,7 @@
   cover=document.createElement('div');cover.id='engefex-cloud-cover';cover.setAttribute('role','dialog');cover.setAttribute('aria-modal','true');cover.setAttribute('aria-label','Acesso à obra da casa');
   cover.innerHTML=String.raw`
   <div class="engefex-cloud-panel">
-    <img class="engefex-cloud-logo" src="engefex-logo.png" alt="Engefex Engenharia e Estruturas Metálicas" width="469" height="364"><h1>Casa Ramon e Talita</h1>
+    <img class="engefex-cloud-logo" src="vertix-logo.png" alt="Vertix Engenharia e Projetos" width="944" height="266"><h1>Casa Ramon e Talita</h1>
     <p>Base compartilhada de obras, orçamento, cronograma e diário.</p>
     <div id="engefex-cloud-view">
      <div data-cloud-panel="login">

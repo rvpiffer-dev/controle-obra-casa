@@ -1,4 +1,4 @@
-/* Importação em lote de documentos fiscais (Excel Engefex).
+/* Importação em lote de documentos fiscais (Excel Vertix).
  * Seleção explícita, pré-visualização, preservação dos campos e integração segura com Compras e Notas.
  */
 (function(root){
@@ -140,7 +140,7 @@
    if(file.size>25*1024*1024)throw Error('A planilha deve ter até 25 MB.');
    busy=true;const fileLabel=$('#batchNotesFilename');if(fileLabel)fileLabel.textContent='Lendo planilha…';
    const sheets=await readExcel(await file.arrayBuffer()),get=name=>parseSheet(sheets.find(s=>s.name.toLowerCase()===name.toLowerCase()));
-   const list=get('Documentos');if(!list.length||!Object.hasOwn(list[0],'ID da linha'))throw Error('A aba Documentos não segue o modelo Engefex.');
+   const list=get('Documentos');if(!list.length||!Object.hasOwn(list[0],'ID da linha'))throw Error('A aba Documentos não segue o modelo Vertix.');
    if(list.length>5000)throw Error('Limite de 5.000 documentos por lote.');
    const items=get('Itens'),due=get('Vencimentos'),texts=get('Textos extraídos');
    const byDoc=(arr,key)=>{const m=new Map();arr.forEach(row=>{const id=text(row,key);if(!m.has(id))m.set(id,[]);m.get(id).push(row)});return m};
@@ -273,7 +273,7 @@
    series:text(raw,'Série da NF'),supplier,supplierDocument:text(raw,'CNPJ fornecedor'),
    date:issued,status:'Confirmada',accessKey:k.length===44?k:'',adjustment,items,
    installments:parts.map(part=>({id:uid(),number:part.number,due:part.due,amount:part.amount})),
-   note:[text(raw,'Observações fiscais / do pedido'),text(raw,'Notas de conferência'),'Importação Engefex: '+doc.signature].filter(Boolean).join('\n')
+   note:[text(raw,'Observações fiscais / do pedido'),text(raw,'Notas de conferência'),'Importação Vertix: '+doc.signature].filter(Boolean).join('\n')
   });
   if(doc.project!=='Geral')for(const item of p.items)item.allocations=[{destination:'work',project:doc.project,stage:doc.stage,share:100}];
   try{P.validate(s,p)}catch(error){return {error:'Não passou na validação financeira: '+error.message}}
@@ -306,7 +306,7 @@ function draftFromDocument(doc,archive){
   importedFinancialDirection:finance,importedCategory:doc.category||'',
   note:[text(raw,'Descrição do serviço'),text(raw,'Descrições produtos/serviços (resumo)'),
     text(raw,'Observações fiscais / do pedido'),text(raw,'Notas de conferência'),
-    'Importação Engefex: '+doc.signature,
+    'Importação Vertix: '+doc.signature,
     originalItems.length!==items.length?'Itens incompletos: conferir dados originais no arquivo fiscal.':'',
     doc.due?.length?'Vencimentos originais disponíveis no arquivo fiscal para conferência.':''
   ].filter(Boolean).join('\n')

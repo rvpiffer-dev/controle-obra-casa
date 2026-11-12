@@ -1,4 +1,4 @@
-/* Importação mensal da folha Engefex a partir das duas abas XLSX. */
+/* Importação mensal da folha Vertix a partir das duas abas XLSX. */
 (function(root){'use strict';
 const original=root.EngefexHRExtra;
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -59,7 +59,7 @@ function page(s,view){
   if(key==='diff')return r.valeSheet==null?'—':money(num(r.valeSheet)-num(r.values?.E));
   return r.values?.[key]===''||r.values?.[key]==null?'—':money(r.values[key]);
  };
- return '<section class="page-head hr-hero"><div><p class="hr-eyebrow">ENGEFEX · RECURSOS HUMANOS</p><h1>Folha de pagamento</h1><p>Salário dia 05 (60%) e vale dia 20 (40%). Abas e competências independentes, conforme o modelo Excel.</p></div></section>'+
+ return '<section class="page-head hr-hero"><div><p class="hr-eyebrow">VERTIX · RECURSOS HUMANOS</p><h1>Folha de pagamento</h1><p>Salário dia 05 (60%) e vale dia 20 (40%). Abas e competências independentes, conforme o modelo Excel.</p></div></section>'+
  '<section class="panel hr-panel"><div class="panel-head"><h2>Competência e importação</h2></div><div class="form-grid"><label>Competência<input type="month" id="payPeriod" value="'+esc(selectedPeriod)+'"></label><label>Importar XLSX com as duas abas<input id="payFile" type="file" accept=".xlsx"></label></div><p id="payFeedback" class="notice">Nova importação da mesma competência solicita confirmação. Outros meses não são alterados.</p><button class="button primary" id="payImport" type="button">Importar folha desta competência</button></section>'+
  '<section class="panel hr-panel"><div class="panel-head"><h2>Consulta de pagamentos</h2><p>'+all.length+' funcionários na competência</p></div>'+
  '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px" role="tablist" aria-label="Tipo de folha"><button class="button '+(tab==='salary'?'primary':'secondary')+'" type="button" data-pay-tab="salary" role="tab" aria-selected="'+(tab==='salary')+'">Salário · dia 05 (60%)</button><button class="button '+(tab==='vale'?'primary':'secondary')+'" type="button" data-pay-tab="vale" role="tab" aria-selected="'+(tab==='vale')+'">Vale · dia 20 (40%)</button></div>'+

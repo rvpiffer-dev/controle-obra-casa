@@ -30,7 +30,7 @@ function validate(s,p){
  if(!strict&&p.date&&!validDate(p.date))throw Error('A data informada não é válida.');
  if(strict&&p.kind==='Nota fiscal'&&!p.number)throw Error('Informe o número da nota fiscal antes de confirmar.');
  if(p.accessKey&&!/^\d{44}$/.test(p.accessKey))throw Error('Chave da NF-e inválida.');
- if(strict&&p.importedFinancialDirection==='receivable')throw Error('Nota emitida pela Engefex: não confirme como Contas a Pagar. Confira o destino financeiro.');
+ if(strict&&p.importedFinancialDirection==='receivable')throw Error('Nota emitida pela Vertix: não confirme como Contas a Pagar. Confira o destino financeiro.');
  if(!Array.isArray(p.items)||p.items.length>1000||(strict&&!p.items.length))throw Error('É necessário ter de 1 a 1.000 itens para confirmar.');
  let ids=new Set();
  for(const item of p.items){

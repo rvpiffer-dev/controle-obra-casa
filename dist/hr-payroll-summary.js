@@ -75,7 +75,7 @@ function attach(s,persist,render,notify,v){
     const content=preview.querySelector('#rhHoleriteBody').innerHTML;
     const title=preview.querySelector('.hr-editor-header')?.textContent||'Demonstrativo de pagamento';
     printable.document.open();
-    printable.document.write('<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Holerite - '+esc(rname)+'</title><style>@page{size:A4 portrait;margin:15mm}body{font:12px Arial,sans-serif;color:#172b4d}h1{font-size:19px}h3{font-size:15px;background:#eaf2fb;padding:8px}#documento{max-width:750px;margin:auto}#documento>div{break-inside:avoid}strong{font-weight:700}@media print{body{margin:0}}</style></head><body><main id="documento"><h1>ENGEFEX · Demonstrativo de pagamento</h1><p>'+esc(rname)+' · Competência '+esc(month)+'</p>'+content+'</main></body></html>');
+    printable.document.write('<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Holerite - '+esc(rname)+'</title><style>@page{size:A4 portrait;margin:15mm}body{font:12px Arial,sans-serif;color:#172b4d}h1{font-size:19px}h3{font-size:15px;background:#eaf2fb;padding:8px}#documento{max-width:750px;margin:auto}#documento>div{break-inside:avoid}strong{font-weight:700}@media print{body{margin:0}}</style></head><body><main id="documento"><h1>VERTIX · Demonstrativo de pagamento</h1><p>'+esc(rname)+' · Competência '+esc(month)+'</p>'+content+'</main></body></html>');
     printable.document.close();printable.focus();
     printable.addEventListener('load',()=>printable.print(),{once:true});
    };

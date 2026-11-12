@@ -194,7 +194,7 @@ function render(){
  const stat=(name,value,subtitle,klass='')=>`<div class="nextar-stat ${klass}"><span class="nextar-stat-label">${name}</span><strong>${formatInt(value)}</strong><small>${subtitle}</small></div>`;
  return `<section class="nextar-page">
   <div class="nextar-hero">
-   <div class="nextar-hero-main"><span class="nextar-eyebrow"><span class="nextar-live-dot"></span> ENGEFEX · CONSULTA COMPARTILHADA</span>
+   <div class="nextar-hero-main"><span class="nextar-eyebrow"><span class="nextar-live-dot"></span> VERTIX · CONSULTA COMPARTILHADA</span>
    <h1>Estoque Nextar</h1>
    <p>Produtos e saldos do último backup, disponíveis para a equipe. Nenhuma alteração é feita no Nextar.</p></div>
    <div class="nextar-hero-side"><span class="nextar-updated-label">ÚLTIMA ATUALIZAÇÃO</span><strong>${escape(lastUpdate)}</strong><small>${s?'Base compartilhada no Supabase':'Nenhum backup publicado'}</small></div>
