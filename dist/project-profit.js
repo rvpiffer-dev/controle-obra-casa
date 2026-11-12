@@ -1,4 +1,4 @@
-/* Engefex: resultado parcial por obra, somente leitura. */
+/* Vertix: resultado parcial por obra, somente leitura. */
 (function moduleEntry(root){
  'use strict';
  const fmt=new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL',minimumFractionDigits:2,maximumFractionDigits:2});
@@ -137,7 +137,7 @@
      '<div class="profit-direct-summary"><span>Contrato atualizado <strong>'+money(r.contract)+'</strong></span>'+
        '<span>Faturamento direto <strong>− '+money(r.directBilling)+'</strong></span>'+
        '<span>Contrato líquido <strong>'+money(r.netContract)+'</strong></span></div>'+
-     '<p class="profit-foot">Somente notas de medições aprovadas. Não são entradas de caixa nem despesas da Engefex.</p>'+
+     '<p class="profit-foot">Somente notas de medições aprovadas. Não são entradas de caixa nem despesas da Vertix.</p>'+
      '<div class="profit-table-wrap"><table class="profit-table"><thead><tr><th>Obra / medição</th><th>NF</th><th>Fornecedor</th><th>Pedido</th><th>Data</th><th>Valor direto</th></tr></thead>'+
        '<tbody>'+(directRows||'<tr><td colspan="6" class="profit-no-data">Nenhum faturamento direto aprovado nesta seleção.</td></tr>')+'</tbody></table></div>'+
      (r.duplicateDirectInvoices?'<p class="profit-warn">'+r.duplicateDirectInvoices+' nota(s) repetida(s) entre medições, contada(s) uma única vez.</p>':'')+
@@ -185,7 +185,7 @@
     <section class="profit-panel"><div class="profit-panel-heading"><div><span class="profit-label">RASTREABILIDADE</span><h3>Últimos lançamentos de despesas</h3></div><span class="profit-counter">${r.items.length} lançamentos</span></div>
       <div class="profit-table-wrap"><table class="profit-table"><thead><tr><th>Origem / descrição</th><th>Obra</th><th>Categoria</th><th>Valor</th></tr></thead><tbody>${recent||'<tr><td colspan="4" class="profit-no-data">Nenhuma nota, medição de mão de obra ou despesa vinculada ainda.</td></tr>'}</tbody></table></div>
     </section>
-    <p class="profit-disclaimer"><strong>Critério de cálculo:</strong> resultado parcial = contratos originais + aditivos aprovados − faturamentos diretos de medições aprovadas − despesas vinculadas à obra − custo de equipes próprias apontadas. Equipes integram o resultado gerencial, mas não são despesas pagas nem contas a pagar. Notas confirmadas com rateio e medições de mão de obra liberadas já geram contas em <em>Contas a Pagar</em>; por isso, não são somadas novamente. Faturamento direto não é entrada de caixa nem despesa da Engefex. Se uma nota direta também estiver cadastrada como custo próprio, revise-a para evitar desconto duplicado. Descontos e acréscimos de pagamento são considerados. Compras do estoque e despesas gerais ainda não atribuídas a uma obra ficam fora. Não é lucro líquido contábil: impostos, retenções, custos futuros e despesas não lançadas podem mudar o resultado.</p>
+    <p class="profit-disclaimer"><strong>Critério de cálculo:</strong> resultado parcial = contratos originais + aditivos aprovados − faturamentos diretos de medições aprovadas − despesas vinculadas à obra − custo de equipes próprias apontadas. Equipes integram o resultado gerencial, mas não são despesas pagas nem contas a pagar. Notas confirmadas com rateio e medições de mão de obra liberadas já geram contas em <em>Contas a Pagar</em>; por isso, não são somadas novamente. Faturamento direto não é entrada de caixa nem despesa da Vertix. Se uma nota direta também estiver cadastrada como custo próprio, revise-a para evitar desconto duplicado. Descontos e acréscimos de pagamento são considerados. Compras do estoque e despesas gerais ainda não atribuídas a uma obra ficam fora. Não é lucro líquido contábil: impostos, retenções, custos futuros e despesas não lançadas podem mudar o resultado.</p>
    </div>`;
  }
  const api={calculate,render};

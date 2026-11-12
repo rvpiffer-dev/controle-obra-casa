@@ -28,7 +28,7 @@ function individual(s,id,kind,month){
  const key=kind==='vale'?'hrPayrollVale':'hrPayroll',r=monthRows(s,month,key).find(x=>x.id===id);
  if(!r)return alert('Registro não encontrado nesta competência.');
  const t=(kind==='sal'?'Demonstrativo individual de salário':'Demonstrativo individual de vale');
- popup(t,'<h1>ENGEFEX · '+h(t)+'</h1><p class="meta">Competência: '+h(month)+' · Pagamento previsto: dia '+(kind==='sal'?'05':'20')+'</p>'+detail(r,kind)+'<p class="note">Demonstrativo interno dos valores informados na folha. Não substitui holerite oficial da contabilidade.</p>',false);
+ popup(t,'<h1>VERTIX · '+h(t)+'</h1><p class="meta">Competência: '+h(month)+' · Pagamento previsto: dia '+(kind==='sal'?'05':'20')+'</p>'+detail(r,kind)+'<p class="note">Demonstrativo interno dos valores informados na folha. Não substitui holerite oficial da contabilidade.</p>',false);
 }
 function general(s,month){
  const salary=monthRows(s,month,'hrPayroll'),vale=monthRows(s,month,'hrPayrollVale');
@@ -37,7 +37,7 @@ function general(s,month){
   return '<h2>'+(kind==='sal'?'Salário · dia 05':'Vale · dia 20')+' — '+rows.length+' registros</h2><table><thead><tr>'+labels.map(x=>'<th>'+h(x)+'</th>').join('')+(kind==='sal'?'<th>Custo/h estimado</th>':'')+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+labels.map((_,i)=>{const k=String.fromCharCode(65+i),v=k==='A'?name(r):r.values?.[k];return '<td>'+((v==null||v==='')?'—':format(v))+'</td>'}).join('')+(kind==='sal'?'<td>'+costText(r)+'</td>':'')+'</tr>').join('')+'</tbody></table>';
  };
  if(!salary.length&&!vale.length)return alert('Não há registros para esta competência.');
- popup('Relatório geral da folha '+month,'<h1>ENGEFEX · Relatório geral da folha</h1><p class="meta">Competência: '+h(month)+' · Valores discriminados exatamente conforme os lançamentos.</p>'+table(salary,'sal')+table(vale,'vale')+'<p class="note">Custo por hora estimado = (salário-base + encargos extras informados) ÷ horas mensais. Não representa automaticamente o custo empregador completo.</p>',true);
+ popup('Relatório geral da folha '+month,'<h1>VERTIX · Relatório geral da folha</h1><p class="meta">Competência: '+h(month)+' · Valores discriminados exatamente conforme os lançamentos.</p>'+table(salary,'sal')+table(vale,'vale')+'<p class="note">Custo por hora estimado = (salário-base + encargos extras informados) ÷ horas mensais. Não representa automaticamente o custo empregador completo.</p>',true);
 }
 function page(s,view){
  const html=original.page(s,view);if(view!=='hr-payroll')return html;

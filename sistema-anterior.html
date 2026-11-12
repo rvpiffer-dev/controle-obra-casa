@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<meta name="theme-color" content="#153a62" />
-<title>Controle da Obra</title>
+<meta name="theme-color" content="#042136" />
+<title>Vertix | Controle da Obra</title>
 <style>
 :root{--blue:#153a62;--blue2:#245b92;--bg:#f4f6f8;--card:#fff;--text:#17212b;--muted:#667380;--green:#25805e;--orange:#d97706;--red:#b94040;--line:#e2e7ec;}
 *{box-sizing:border-box} html,body{margin:0;background:var(--bg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--text)}
@@ -40,10 +40,10 @@ details{border:1px solid var(--line);border-radius:11px;background:#fff;margin:9
 .auth-card h2{margin:0 0 5px;color:#153a62}.auth-card p{color:#667380;font-size:13px;margin:0 0 15px}.sync-pill{position:absolute;right:14px;bottom:9px;font-size:10px;background:#ffffff24;padding:4px 8px;border-radius:99px;color:#fff}.sync-pill.ok{background:#1f8a5b}.sync-pill.warn{background:#c77816}
 @media(min-width:700px){.grid{grid-template-columns:repeat(4,1fr)}.nav{left:50%;transform:translateX(-50%);max-width:900px;border-left:1px solid var(--line);border-right:1px solid var(--line)}}
 </style>
-</head>
+<link rel="stylesheet" href="dist/vertix-brand.css?v=4.20.0"></head>
 <body>
 <div id="authScreen" class="auth-screen"><div class="auth-card"><h2>Controle da Obra</h2><p>Entre para sincronizar a obra entre celular e computador.</p><label>E-mail</label><input id="loginEmail" type="email" autocomplete="email"><label>Senha</label><input id="loginPassword" type="password"><button class="btn" style="width:100%;margin-top:14px" onclick="loginFirebase()">Entrar</button><div id="loginError" style="color:#b94040;font-size:12px;margin-top:10px"></div></div></div>
-<header class="top"><small>Controle compartilhado da obra</small><h1>Casa Ramon e Talita</h1><span id="syncPill" class="sync-pill warn">conectando…</span></header>
+<header class="top"><img src="dist/vertix-logo.png" alt="Vertix Engenharia e Projetos" width="944" height="266" style="display:block;width:210px;max-width:70%;height:auto;background:white;padding:10px;border-radius:8px;margin-bottom:12px"><small>Controle compartilhado da obra</small><h1>Casa Ramon e Talita</h1><span id="syncPill" class="sync-pill warn">conectando…</span></header>
 <main class="wrap"><section id="home" class="page active"></section><section id="schedule" class="page"></section><section id="costs" class="page"></section><section id="pls" class="page"></section><section id="budget" class="page"></section><section id="settings" class="page"></section></main>
 <nav class="nav"><button data-page="home" class="active"><b>⌂</b>Início</button><button data-page="schedule"><b>▤</b>Cronograma</button><button data-page="costs"><b>＋</b>Custos</button><button data-page="pls"><b>◉</b>PLS</button><button data-page="budget"><b>R$</b>Orçamento</button><button data-page="settings"><b>⚙</b>Ajustes</button></nav>
 <div id="modal" class="modal"><div id="sheet" class="sheet"></div></div>

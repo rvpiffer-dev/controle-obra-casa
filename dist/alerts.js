@@ -1,4 +1,4 @@
-/* Engefex: personal issue inbox on top of the shared workspace.
+/* Vertix: personal issue inbox on top of the shared workspace.
  * UI scoping is not database isolation. Current engefex_state access remains workspace-wide.
  */
 (function(root){'use strict';

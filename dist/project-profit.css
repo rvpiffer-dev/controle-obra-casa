@@ -1,5 +1,5 @@
 
-/* Painel de resultado por obra — Engefex v4.15.0 */
+/* Painel de resultado por obra — Vertix v4.15.0 */
 .profit-screen{display:flex;flex-direction:column;gap:19px;margin-bottom:32px;color:#1b2b42}
 .profit-hero{background:linear-gradient(120deg,#142640 0%,#14385a 58%,#126080 100%);color:#fff;border-radius:21px;padding:32px 35px;display:flex;align-items:center;justify-content:space-between;gap:22px;box-shadow:0 17px 32px #16345020;overflow:hidden;position:relative}
 .profit-hero:after{content:"";width:260px;height:260px;border:1px solid #ffffff16;border-radius:50%;position:absolute;right:19%;top:-130px;box-shadow:0 0 0 47px #ffffff07,0 0 0 94px #ffffff05;pointer-events:none}

@@ -46,7 +46,7 @@ async function generate(state,recordId,options={}){
  function begin(){
   page=pdf.addPage();page.setSize(W,H);y=H-41;
   if(logo){const image=logo.scale(.15);let factor=Math.min(125/image.width,47/image.height);page.drawImage(logo,{x:L,y:H-88,width:image.width*factor,height:image.height*factor})}
-  text('ENGEFEX ENGENHARIA',logo?168:L,H-50,14,true,blue);
+  text('Vertix Engenharia e Projetos',logo?168:L,H-50,14,true,blue);
   text('MEDICAO DE SERVICOS - '+data.number,logo?168:L,H-68,11,true,ink);
   page.drawLine({start:{x:L,y:H-99},end:{x:R,y:H-99},color:blue,thickness:1.8});y=H-121;
   text('OBRA: '+data.project.name,L,y,10,true);y-=16;
@@ -79,14 +79,14 @@ async function generate(state,recordId,options={}){
  }
  if(data.note){band('4. OBSERVACOES');for(const line of wrap(data.note,R-L-12,8)){space(15);text(line,L+6,y-12,8);y-=14}}
  for(let i=0;i<pdf.getPageCount();i++){const p=pdf.getPage(i);p.drawLine({start:{x:L,y:39},end:{x:R,y:39},thickness:.5,color:edge});
-  p.drawText('ENGEFEX | '+clean(data.number)+' | '+(data.approved?'Medição aprovada':'Medição para conferência'),{x:L,y:24,font:normal,size:7,color:muted});
+  p.drawText('VERTIX | '+clean(data.number)+' | '+(data.approved?'Medição aprovada':'Medição para conferência'),{x:L,y:24,font:normal,size:7,color:muted});
   const title='Pagina '+(i+1)+' de '+pdf.getPageCount();p.drawText(title,{x:R-normal.widthOfTextAtSize(title,7),y:24,font:normal,size:7,color:muted});
  }
- pdf.setTitle('Medição '+data.number+' - '+data.project.name);pdf.setAuthor('Engefex Engenharia');pdf.setSubject('Itens medidos, retenção contratual, amortização de entrada e notas de faturamento direto');
+ pdf.setTitle('Medição '+data.number+' - '+data.project.name);pdf.setAuthor('Vertix Engenharia e Projetos');pdf.setSubject('Itens medidos, retenção contratual, amortização de entrada e notas de faturamento direto');
  return pdf.save();
 }
 async function download(state,recordId){
- let logoBytes=null;try{const response=await fetch('engefex-logo.png');if(response.ok)logoBytes=new Uint8Array(await response.arrayBuffer())}catch{}
+ let logoBytes=null;try{const response=await fetch('vertix-logo.png');if(response.ok)logoBytes=new Uint8Array(await response.arrayBuffer())}catch{}
  const pdf=await generate(state,recordId,{logoBytes}),row=state.measurements.find(m=>m.id===recordId);
  const name=('Medicao_'+(row?.number||'')+'_'+(state.projects.find(p=>p.id===row?.project)?.name||'Obra')).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9_-]+/g,'_').slice(0,130)+'.pdf';
  const url=URL.createObjectURL(new Blob([pdf],{type:'application/pdf'})),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),60000);

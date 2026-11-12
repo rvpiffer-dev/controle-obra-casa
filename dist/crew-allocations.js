@@ -1,4 +1,4 @@
-/* Engefex — apontamento diário de funcionários por obra, com custo/hora da folha. */
+/* Vertix — apontamento diário de funcionários por obra, com custo/hora da folha. */
 (function(root){'use strict';
  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
  const format=v=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(v)||0);

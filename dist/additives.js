@@ -1,4 +1,4 @@
-/* Engefex: aditivos contratuais vinculados a grupos exclusivos do orçamento.
+/* Vertix: aditivos contratuais vinculados a grupos exclusivos do orçamento.
    Aditivos em elaboração não geram itens de medição nem alteram receita contratada. */
 (function(root){'use strict';
 const D=()=>root.Obras;
