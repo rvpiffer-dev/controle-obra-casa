@@ -57,6 +57,35 @@ function releaseBatch(state,recordId,meta){let first=state.measurements.find(m=>
  const entry=(state.receivableEntries||[]).filter(e=>e.project===first.project&&e.category==='Adiantamento contratual').reduce((n,e)=>n+Number(e.amount||0),0);
  const already=state.measurements.filter(m=>m.project===first.project&&m.number!==first.number).reduce((seen,m)=>{if(seen.numbers.has(m.number))return seen;seen.numbers.add(m.number);seen.total+=Number(m.advanceOffset||0);return seen},{numbers:new Set(),total:0}).total;
  if(appliedAdvance>0&&(!entry||appliedAdvance+already>entry+0.01))throw Error('A amortização ultrapassa o saldo da entrada contratual.');for(let m of group){next=D.saveRecord(next,'measurements',{...m,status:'Aprovada',submitted:meta.submitted,approved:meta.approved,expected:meta.expected,evidence:String(meta.evidence).trim()})}for(const m of next.measurements.filter(m=>m.project===first.project&&m.number===first.number)){m.directInvoices=directInvoices;m.advanceOffset=appliedAdvance;m.advanceRate=advanceRate}D.validateMeasurementFinances(next);D.validateReceivableInstallments(next);let count=Number(meta.receivableInstallmentCount??first.receivableInstallmentCount??1);if(!Number.isInteger(count)||count<1||count>120)throw Error('Informe de 1 a 120 parcelas a receber.');if((count>1||Number(meta.receivableEntryAmount??first.receivableEntryAmount)>0)&&!group.some(m=>m.receivableInstallments?.length)){let row=D.receivableTotals(next).find(r=>r.project===first.project&&r.number===first.number&&r.type==='Medição');if(row)next=D.setReceivableInstallments(next,row.sourceId,'Medição',root.EngefexReceivableInstallments.generateTerms(row.amount,count,meta.expected,Number(meta.receivableEntryAmount??first.receivableEntryAmount??0),meta.receivableEntryDue||first.receivableEntryDue||''))}for(let m of next.measurements.filter(m=>m.project===first.project&&m.number===first.number))m.receivableInstallmentCount=count;return next}
+function reopenBatch(state,recordId){
+ const first=state.measurements.find(m=>m.id===recordId);
+ if(!first)throw Error('Medição não encontrada. Atualize a lista.');
+ const group=state.measurements.filter(m=>m.project===first.project&&m.number===first.number);
+ if(group.some(m=>m.status!=='Aprovada'))throw Error('Somente medições inteiras liberadas podem ser reabertas por este botão.');
+ if(state.receipts.some(r=>!r.receivableId&&r.project===first.project&&r.number===first.number))
+  throw Error('Esta medição possui recebimentos registrados. Estorne os recebimentos em Contas a receber antes de reabrir a liberação.');
+ const next=clone(state),before=clone(group);
+ for(const m of next.measurements.filter(m=>m.project===first.project&&m.number===first.number)){
+  m.plannedDirectInvoices=clone(m.directInvoices??m.plannedDirectInvoices??[]);
+  m.plannedAdvanceOffset=Number(m.advanceOffset??m.plannedAdvanceOffset??0);
+  m.plannedAdvanceRate=Number(m.advanceRate??m.plannedAdvanceRate??0);
+  m.status='Preparada';m.approved='';m.submitted='';m.retentionReleased=false;
+  m.directInvoices=[];m.advanceOffset=0;m.advanceRate=0;
+  delete m.receivableInstallments;delete m.retentionInstallments;
+ }
+ D.validateMeasurementFinances(next);D.validateReceivableInstallments(next);D.backupValid(next);
+ next.history.unshift({id:id(),time:new Date().toISOString(),kind:'measurementSheet',record:first.measurementSheetBatch||first.id,action:'Liberação desfeita; medição reaberta para edição',before,after:clone(next.measurements.filter(m=>m.project===first.project&&m.number===first.number))});
+ return next;
+}
+async function reopenAndEdit(recordId){
+ if(pending)return;
+ try{
+  if(root.EngefexAccess?.context&&!root.EngefexAccess.canWrite('measurements'))throw Error('Seu acesso não permite editar medições.');
+  const next=reopenBatch(api.getState(),recordId);pending=true;
+  if(await api.save(next)===false)throw Error('O servidor não confirmou a reabertura. Atualize os dados antes de tentar novamente.');
+  pending=false;api.render();api.toast('Liberação desfeita. Medição reaberta para edição.');open(recordId);
+ }catch(error){pending=false;api.toast(error.message||String(error))}
+}
 function parseDirectInvoices(text){
  return String(text||'').split(/\r?\n/).map(s=>s.trim()).filter(Boolean).map((line,i)=>{
   const parts=line.split(';').map(x=>x.trim());
@@ -236,6 +265,6 @@ $('#measurementSheetFinancialPreview').textContent='Bruto '+money(gross)+' − R
 if(net<-.001)errors++;
 }catch(e){$('#measurementSheetFinancialPreview').textContent=e.message;errors++}
 $('#measurementSheetSave').disabled=pending||!count||!!errors}
-root.EngefexMeasurementSheet={rows,calculate,applyModeToAll,saveBatch,editBatch,releaseBatch,saveContractEntry,deleteContractEntry,readInvoiceGrid,number,isDirty,busy:()=>pending,handle(action){if(action!=='measurement-sheet'&&action!=='contract-entry'&&!action?.startsWith('contract-entry-edit:')&&!action?.startsWith('contract-entry-delete:')&&!action?.startsWith('measurement-release:')&&!action?.startsWith('measurement-edit:')&&!action?.startsWith('measurement-view:')&&!action?.startsWith('measurement-pdf:'))return false;try{if(action==='contract-entry')openContractEntry();else if(action.startsWith('contract-entry-edit:'))openContractEntry(action.slice('contract-entry-edit:'.length));else if(action.startsWith('contract-entry-delete:'))removeContractEntry(action.slice('contract-entry-delete:'.length));else if(action.startsWith('measurement-release:'))openRelease(action.slice('measurement-release:'.length));else if(action.startsWith('measurement-edit:'))open(action.slice('measurement-edit:'.length));else if(action.startsWith('measurement-view:'))viewBatch(action.slice('measurement-view:'.length));else if(action.startsWith('measurement-pdf:')){if(!root.EngefexMeasurementPDF)throw Error('Gerador de PDF indisponível. Atualize a página.');root.EngefexMeasurementPDF.download(api.getState(),action.slice('measurement-pdf:'.length)).catch(e=>api.toast(e.message||String(e)))}else open()}catch(e){api.toast(e.message)}return true},init(bridge){api=bridge}};
+root.EngefexMeasurementSheet={rows,calculate,applyModeToAll,saveBatch,editBatch,releaseBatch,reopenBatch,saveContractEntry,deleteContractEntry,readInvoiceGrid,number,isDirty,busy:()=>pending,handle(action){if(action!=='measurement-sheet'&&action!=='contract-entry'&&!action?.startsWith('contract-entry-edit:')&&!action?.startsWith('contract-entry-delete:')&&!action?.startsWith('measurement-release:')&&!action?.startsWith('measurement-reopen:')&&!action?.startsWith('measurement-edit:')&&!action?.startsWith('measurement-view:')&&!action?.startsWith('measurement-pdf:'))return false;try{if(action==='contract-entry')openContractEntry();else if(action.startsWith('contract-entry-edit:'))openContractEntry(action.slice('contract-entry-edit:'.length));else if(action.startsWith('contract-entry-delete:'))removeContractEntry(action.slice('contract-entry-delete:'.length));else if(action.startsWith('measurement-reopen:'))reopenAndEdit(action.slice('measurement-reopen:'.length));else if(action.startsWith('measurement-release:'))openRelease(action.slice('measurement-release:'.length));else if(action.startsWith('measurement-edit:'))open(action.slice('measurement-edit:'.length));else if(action.startsWith('measurement-view:'))viewBatch(action.slice('measurement-view:'.length));else if(action.startsWith('measurement-pdf:')){if(!root.EngefexMeasurementPDF)throw Error('Gerador de PDF indisponível. Atualize a página.');root.EngefexMeasurementPDF.download(api.getState(),action.slice('measurement-pdf:'.length)).catch(e=>api.toast(e.message||String(e)))}else open()}catch(e){api.toast(e.message)}return true},init(bridge){api=bridge}};
 })(typeof window==='undefined'?globalThis:window);
 
