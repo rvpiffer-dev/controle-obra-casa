@@ -48,6 +48,12 @@
             task.casaBudgetItems?.includes(row.id),
         );
         const taskId = link ? taskIds.get(link.id) : original.taskId;
+        const historicalAmount = (key, unitKey, unit) => {
+          const saved = row.casa;
+          return saved && Number(saved.qty) === quantity && Number(saved[unitKey]) === unit &&
+            saved[key] != null && Number.isFinite(Number(saved[key]))
+            ? Number(saved[key]) : quantity * unit;
+        };
         return {
           ...original,
           ...clone(row.casa || {}),
@@ -62,10 +68,10 @@
           equipUnit,
           otherUnit,
           unitCost: number(row.unitPrice),
-          material: quantity * materialUnit,
-          labor: quantity * laborUnit,
-          equipment: quantity * equipUnit,
-          others: quantity * otherUnit,
+          material: historicalAmount("material", "materialUnit", materialUnit),
+          labor: historicalAmount("labor", "laborUnit", laborUnit),
+          equipment: historicalAmount("equipment", "equipUnit", equipUnit),
+          others: historicalAmount("others", "otherUnit", otherUnit),
           total: number(row.sale),
           taskId,
           reference: row.reference || row.source || original.reference || "",
@@ -97,13 +103,14 @@
           base.tasks?.find((item) => Number(item.id) === id) || {};
         return {
           ...original,
+          ...clone(row.casaTask || {}),
           __id: row.id,
           id,
           phase:
             source.stages.find((item) => item.id === row.stage)?.name ||
             "Sem etapa",
           name: row.name,
-          origin: row.code,
+          origin: row.casaTask?.origin || original.origin || row.source || row.code,
           start: row.start,
           finish: row.finish,
           progress: row.quantity ? row.executed / row.quantity : 0,
@@ -116,7 +123,7 @@
               (service) =>
                 String(service.taskId) === String(id) && !service.removed,
             )
-            .reduce((sum, service) => sum + service.total, 0),
+            .reduce((sum, service) => sum + service.total, 0) || number(row.casaTask?.plannedCost ?? original.plannedCost),
           resource: row.team || row.responsible || original.resource || "",
           notes: row.evidence || "",
           duration: row.casaDuration || original.duration || 1,
@@ -126,13 +133,16 @@
         .filter((row) => row.project === projectId)
         .map((row) => ({
           ...clone(row),
+          id: row.casaLegacyId ?? row.id,
+          __id: row.id,
           date: row.paidDate || row.date || row.due,
           macro: stages.find((stage) => stage.id === row.stage)?.code || "",
-          nature: row.category,
+          nature: ({Materiais:"Material", Equipamentos:"Equipamento", "Indiretos e tributos":"Outros"})[row.category] || row.category,
           notes: row.note || "",
         })),
       pls: clone(stored.pls || base.pls || []),
       purchases: clone(stored.purchases || base.purchases || []),
+      purchaseAudit: clone(stored.purchaseAudit || null),
       purchasePlan: clone(stored.purchasePlan || {}),
       budgetOverrides: {},
       addedServices: [],
@@ -462,6 +472,15 @@
           (row) => String(row.code) !== code,
         );
       }
+    // Full legacy snapshots omit original services with zero quantity.
+    // Keep their identifiers for reactivation without active financial value.
+    const templateCodes = new Set((template.services || []).map(row => String(row.code)));
+    for (const row of [...baseline.services, ...baseline.__archived]) {
+      if (!templateCodes.has(String(row.code))) continue;
+      if (incoming.services.some(item => String(item.code) === String(row.code)) ||
+          incoming.__archived.some(item => String(item.code) === String(row.code))) continue;
+      incoming.__archived.push({...clone(row), removed:true});
+    }
     let result = applyState(
       draft,
       projectId,
@@ -470,6 +489,39 @@
       manager,
       domain,
     );
+    const importedProject = result.projects.find(row => row.id === projectId);
+    for (const service of incoming.services) {
+      const row = result.budgetItems.find(item => item.project === projectId && String(item.code) === String(service.code));
+      // Negotiated historical totals may differ from quantity times unit price.
+      if (service.total != null) {
+        if (!Number.isFinite(Number(service.total)) || Number(service.total) < 0)
+          throw Error("Total do serviço importado inválido.");
+        row.sale = Number(service.total);
+      }
+      row.casa = {...clone(service), __id:row.id};
+      row.casaLegacyControlled = true;
+      const stage = result.budgetStages.find(item => item.project === projectId && item.name === service.macro);
+      if (stage) row.stage = stage.id;
+    }
+    for (const task of incoming.tasks) {
+      const row = result.activities.find(item => item.project === projectId &&
+        (task.__id ? item.id === task.__id : String(item.casaTaskId) === String(task.id)));
+      row.casaTask = clone(task);
+      row.source = task.origin || row.source || "";
+      row.casaTaskId = task.id;
+    }
+    importedProject.name = legacy.project.name || importedProject.name;
+    importedProject.start = legacy.project.start || importedProject.start;
+    importedProject.casa = {...importedProject.casa,
+      purchases:clone(legacy.purchases || []), purchaseAudit:clone(legacy.purchaseAudit || null),
+      legacyImportedState:clone(legacy)};
+    importedProject.value = result.budgetItems.filter(row => row.project === projectId && !row.casaRemoved)
+      .reduce((sum,row) => sum + number(row.sale), 0);
+    for (const macro of legacy.macros || []) {
+      const row = result.budgetStages.find(item => item.project === projectId && item.name === macro.name);
+      if (row) row.budgets = {Materiais:number(macro.material), "Mão de obra":number(macro.labor),
+        Equipamentos:number(macro.equipment), Terceiros:0, "Indiretos e tributos":number(macro.others)};
+    }
     const category = {
       Material: "Materiais",
       "Mão de obra": "Mão de obra",
@@ -501,6 +553,7 @@
         paidDate: cost.paid ? cost.date || "" : "",
         note: cost.notes || "",
         casaLegacyId: cost.id,
+        casaLegacy: clone(cost),
       };
       if (record.amount < 0 || record.paid < 0 || record.paid > record.amount)
         throw Error(
@@ -509,6 +562,9 @@
       if (prior) Object.assign(prior, record);
       else result.costs.push(record);
     }
+    result = manager.reconcile(result);
+    for (const row of result.budgetItems.filter(item => item.project === projectId))
+      domain.validateBudgetItem(result, row);
     domain.backupValid(result);
     return result;
   }
